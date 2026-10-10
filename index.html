@@ -3,50 +3,78 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="description" content="A collection of small experiments in interfaces, motion, sound, and diagrams.">
+  <meta name="description" content="Small studies in interfaces, motion, sound, and diagrams, inspired by interesting work found on the internet and X/Twitter.">
   <title>Artifacts</title>
   <style>
     :root { color-scheme: light; font-family: system-ui, sans-serif; color: #252522; background: #fafaf7; }
     * { box-sizing: border-box; }
     body { margin: 0 auto; max-width: 860px; padding: 64px 24px 32px; }
-    header { margin-bottom: 48px; }
+    header { margin-bottom: 32px; }
     h1 { font-size: clamp(2.5rem, 7vw, 4rem); letter-spacing: -.05em; margin: 0 0 12px; font-weight: 650; }
     p { line-height: 1.6; color: #62625b; margin: 0; }
+    header p { max-width: 650px; }
     .label { font: .75rem ui-monospace, monospace; text-transform: uppercase; letter-spacing: .08em; color: #62625b; margin-bottom: 14px; }
-    ol { list-style: none; padding: 0; margin: 0; border-top: 1px solid #d9d9d0; }
-    li { border-bottom: 1px solid #d9d9d0; }
-    li a { display: grid; grid-template-columns: 36px 1fr 24px; gap: 12px; padding: 23px 0; text-decoration: none; color: inherit; align-items: baseline; }
-    li a:hover { background: #efefe8; }
-    a:focus-visible { outline: 2px solid #365c47; outline-offset: 5px; }
-    .number, .arrow { font: .85rem ui-monospace, monospace; color: #62625b; }
-    h2 { font-size: 1.15rem; font-weight: 600; margin: 0 0 6px; }
-    li p { font-size: .95rem; }
-    aside { margin-top: 36px; font-size: .9rem; }
-    aside a { color: inherit; text-underline-offset: 3px; }
-    footer { margin-top: 48px; font-size: .8rem; color: #62625b; line-height: 1.6; }
-    @media (max-width: 480px) { body { padding-top: 36px; } li a { grid-template-columns: 24px 1fr 16px; gap: 8px; } }
+    ol { list-style: none; padding: 0; margin: 0; }
+    li { display: grid; grid-template-columns: 30px minmax(0, 1fr); gap: 12px; padding: 12px 0; }
+    .number { font: .8rem ui-monospace, monospace; color: #62625b; padding-top: 4px; }
+    .entry-heading { display: flex; align-items: baseline; justify-content: space-between; gap: 6px 16px; flex-wrap: wrap; margin-bottom: 3px; }
+    h2 { font-size: 1.15rem; font-weight: 600; margin: 0; }
+    a { color: inherit; text-underline-offset: 3px; }
+    h2 a { text-decoration: none; }
+    li:hover h2 a, h2 a:focus-visible { text-decoration: underline; }
+    a:focus-visible { outline: 2px solid #365c47; outline-offset: 4px; }
+    time { font: .72rem ui-monospace, monospace; color: #77776e; white-space: nowrap; }
+    li p { font-size: .93rem; line-height: 1.45; }
+    li .source { font-size: .78rem; color: #77776e; margin-top: 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    aside { margin-top: 28px; font-size: .85rem; }
+    footer { margin-top: 32px; font-size: .75rem; color: #77776e; line-height: 1.6; }
+    @media (max-width: 480px) { body { padding-top: 36px; } li { grid-template-columns: 24px minmax(0, 1fr); gap: 8px; } }
   </style>
 </head>
 <body>
   <header>
     <div class="label">A collection of experiments</div>
     <h1>Artifacts</h1>
-    <p>Small studies in interfaces, motion, sound, and diagrams.<br>Open an experiment and explore how it works.</p>
+    <p>Small studies in interfaces, motion, sound, and diagrams, inspired by interesting work I find on the internet, X/Twitter, and elsewhere. Open an experiment and explore how it works.</p>
   </header>
   <main>
     <nav aria-label="Artifacts">
       <ol>
-        <li><a href="exploded-atlas/dist/exploded-atlas.html"><span class="number" aria-hidden="true">01</span><div><h2>Exploded Atlas</h2><p>Layered landscapes, assembly diagrams, and the art of annotation.</p></div><span class="arrow" aria-hidden="true">↗</span></a></li>
-        <li><a href="motion-accent-lab/dist/motion-accent.html"><span class="number" aria-hidden="true">02</span><div><h2>Motion Accent Lab</h2><p>Inspect a motion timeline, color regions, and quantized lighting.</p></div><span class="arrow" aria-hidden="true">↗</span></a></li>
-        <li><a href="opentunnel-lab/dist/tunnel-signal.html"><span class="number" aria-hidden="true">03</span><div><h2>Tunnel / Signal Lab</h2><p>Printed shader textures and an event-driven sonic diagram.</p></div><span class="arrow" aria-hidden="true">↗</span></a></li>
-        <li><a href="oxide-header-lab/index.html"><span class="number" aria-hidden="true">04</span><div><h2>Oxide Header Lab</h2><p>Six original ASCII experiments in editorial and animated headers.</p></div><span class="arrow" aria-hidden="true">↗</span></a></li>
-        <li><a href="scanground/dist/index.html"><span class="number" aria-hidden="true">05</span><div><h2>Scanground</h2><p>An image-filter playground for scanlines, saturation, and dithering.</p></div><span class="arrow" aria-hidden="true">↗</span></a></li>
-        <li><a href="soundlab/sound-lab.html"><span class="number" aria-hidden="true">06</span><div><h2>Sound Lab</h2><p>Make interface sounds, audition samples, and export edited audio.</p></div><span class="arrow" aria-hidden="true">↗</span></a></li>
-        <li><a href="clip_path/clip_path.html"><span class="number" aria-hidden="true">07</span><div><h2>Clip Path</h2><p>A terminal-style experiment in CSS polygons and drop shadows.</p></div><span class="arrow" aria-hidden="true">↗</span></a></li>
+        <li><span class="number" aria-hidden="true">01</span><div>
+          <div class="entry-heading"><h2><a href="exploded-atlas/dist/exploded-atlas.html">Exploded Atlas</a></h2><time datetime="2026-10-10">Added Oct 10, 2026</time></div>
+          <p>Layered landscapes, assembly diagrams, and the art of annotation.</p>
+          <p class="source" title="Based on supplied landscape and pavilion diagrams attributed to Archmaster; attribution is unverified.">Based on supplied diagrams attributed to Archmaster.</p>
+        </div></li>
+        <li><span class="number" aria-hidden="true">02</span><div>
+          <div class="entry-heading"><h2><a href="motion-accent-lab/dist/motion-accent.html">Motion Accent Lab</a></h2><time datetime="2026-10-09">Added Oct 9, 2026</time></div>
+          <p>Inspect a motion timeline, color regions, and quantized lighting.</p>
+          <p class="source">Based on <a href="https://animejs.com/">Anime.js</a>, <a href="https://labs.sntx.co/experiments/vesper-drift/">Vesper Drift</a>, and <a href="https://x.com/antic/status/2108582512960368715">antic</a> / <a href="https://x.com/wheresryan22/status/2108172796367106142">Ryan</a> on X.</p>
+        </div></li>
+        <li><span class="number" aria-hidden="true">03</span><div>
+          <div class="entry-heading"><h2><a href="opentunnel-lab/dist/tunnel-signal.html">Tunnel / Signal Lab</a></h2><time datetime="2026-10-09">Added Oct 9, 2026</time></div>
+          <p>Printed shader textures and an event-driven sonic diagram.</p>
+          <p class="source">Based on <a href="https://opentunnel.xyz/">OpenTunnel</a>’s printed fields and network animation.</p>
+        </div></li>
+        <li><span class="number" aria-hidden="true">04</span><div>
+          <div class="entry-heading"><h2><a href="oxide-header-lab/index.html">Oxide Header Lab</a></h2><time datetime="2026-10-09">Added Oct 9, 2026</time></div>
+          <p>Six original ASCII experiments in editorial and animated headers.</p>
+          <p class="source">Based on <a href="https://oxide.computer/blog/oxide-anthropic-project-glasswing">Oxide’s blog headers</a>.</p>
+        </div></li>
+        <!-- Older collection-entry dates are approximate; see docs/artifact-catalog.md. -->
+        <li><span class="number" aria-hidden="true">05</span><div>
+          <div class="entry-heading"><h2><a href="scanground/dist/index.html">Scanground</a></h2><time datetime="2026-10-09" title="Approximate collection-entry date; the original project existed in October 2025.">Added ~Oct 9, 2026</time></div>
+          <p>An image-filter playground for scanlines, saturation, and dithering.</p>
+          <p class="source">Original filter study; sample artwork made for this collection.</p>
+        </div></li>
+        <li><span class="number" aria-hidden="true">06</span><div>
+          <div class="entry-heading"><h2><a href="clip_path/clip_path.html">Clip Path</a></h2><time datetime="2026-10-09" title="Inferred from the first collection README for this artifact; the original file existed earlier.">Added ~Oct 9, 2026</time></div>
+          <p>A terminal-style experiment in CSS polygons and drop shadows.</p>
+          <p class="source">Terminal / ASCII aesthetics; specific reference not recorded.</p>
+        </div></li>
       </ol>
     </nav>
     <aside><p>Also in the collection: <a href="validate_opml/README.md">Podcast OPML validation</a>, a command-line utility.</p></aside>
   </main>
-  <footer>Independent educational experiments. Reference-inspired studies are not affiliated with the original sites or their creators.</footer>
+  <footer>Independent educational experiments, unaffiliated with the referenced creators. Dates marked ~ are inferred.</footer>
 </body>
 </html>

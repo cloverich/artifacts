@@ -20,13 +20,12 @@ await mkdir(output, { recursive: true });
 for (const path of [
   'index.html',
   'clip_path/clip_path.html',
-  'soundlab/sound-lab.html',
   'oxide-header-lab/index.html', 'oxide-header-lab/style.css',
   'oxide-header-lab/app.js', 'oxide-header-lab/analysis.md',
   'exploded-atlas/dist/exploded-atlas.html',
   'motion-accent-lab/dist/motion-accent.html',
   'opentunnel-lab/dist/tunnel-signal.html',
-  'scanground/dist',
+  'scanground/dist/index.html',
   'validate_opml/README.md',
 ]) {
   const destination = resolve(output, path);

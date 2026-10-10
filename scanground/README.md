@@ -117,6 +117,6 @@ npm run build
 npm run preview
 ```
 
-The production build uses relative assets and hash routes so it works at a GitHub Pages repository subpath and reloads without server rewrites. Vite does not copy `public/`; add intentional assets via source imports. Serve the build over HTTP rather than opening its module scripts through `file://`.
+The production build uses relative assets and hash routes so it works at a GitHub Pages repository subpath and reloads without server rewrites. Vite does not copy `public/`; add intentional assets via source imports. The build then packages Vite’s single entry and CSS into `dist/index.html`, with classic JavaScript after the React root. Open it directly from disk or serve it over HTTP. The packager fails if future module splitting or extra assets require a different bundling approach.
 
 Sample provenance: `src/assets/sample.svg` is original procedural vector artwork created for this collection. Unused React/Vite starter logos were removed before the fresh snapshot; Google Fonts are referenced remotely. Dependency sources and versions are recorded in the package manifest and lockfile.
