@@ -1,0 +1,120 @@
+# Shared baseline adapted from https://github.com/github/gitignore (CC0).
+# Add project-specific rules as languages/toolchains are introduced.
+# Keep source, intentional assets, shared configuration, and lockfiles tracked.
+
+# macOS metadata and resource forks
+.DS_Store
+.localized
+__MACOSX/
+.AppleDouble
+.LSOverride
+Icon?
+._*
+.DocumentRevisions-V100/
+.fseventsd/
+.Spotlight-V100/
+.TemporaryItems/
+.Trashes/
+.VolumeIcon.icns
+.com.apple.timemachine.donotpresent
+.AppleDB
+.AppleDesktop
+Network Trash Folder/
+Temporary Items/
+.apdisk
+
+# Other OS and editor clutter
+Thumbs.db
+Desktop.ini
+*~
+*.swp
+*.swo
+.idea/
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+*.suo
+*.user
+*.xcuserstate
+xcuserdata/
+.claude/settings.local.json
+
+# Secrets and local configuration (safe examples may be committed)
+.env
+.env.*
+!.env.example
+!.env.*.example
+!.env.sample
+!.env.template
+*.local
+*.local.*
+*.pem
+*.key
+
+# Dependencies, builds, and tool caches
+node_modules/
+.npm/
+.pnpm-store/
+.yarn/cache/
+.yarn/unplugged/
+.yarn/install-state.gz
+.pnp.*
+dist/
+dist-ssr/
+build/
+target/
+.cache/
+.parcel-cache/
+.vite/
+.next/
+.nuxt/
+.output/
+.svelte-kit/
+.astro/
+.turbo/
+.eslintcache
+.stylelintcache
+*.tsbuildinfo
+vite.config.*.timestamp-*
+
+# Python environments, bytecode, and tooling
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+__pypackages__/
+*.egg-info/
+.eggs/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.tox/
+.nox/
+.ipynb_checkpoints/
+
+# Common JVM, .NET, and Swift build state
+.gradle/
+*.class
+**/obj/
+.build/
+.swiftpm/
+DerivedData/
+
+# Logs and test output
+logs/
+*.log
+*.pid
+*.pid.lock
+coverage/
+htmlcov/
+.coverage
+.coverage.*
+.nyc_output/
+*.lcov
+playwright-report/
+test-results/
+
+# Curated GitHub Pages publication (built by scripts/build-pages.mjs)
+/_site/

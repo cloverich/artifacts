@@ -1,0 +1,7 @@
+{
+  "name": "motion-accent-lab",
+  "private": true,
+  "version": "1.0.0",
+  "scripts": { "build": "node build.mjs" },
+  "dependencies": { "animejs": "4.5.0" }
+}

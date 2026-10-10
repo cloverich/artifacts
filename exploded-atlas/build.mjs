@@ -1,0 +1,13 @@
+import {readFile,writeFile,mkdir} from 'node:fs/promises';
+import {Script} from 'node:vm';
+const root=new URL('./',import.meta.url);
+const read=name=>readFile(new URL(name,root),'utf8');
+let html=await read('index.html');
+const code=(await read('mechanics.mjs')).replace(/export /g,'')+'\n'+await read('app.js');
+new Script(code);
+const escape=s=>s.replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;');
+html=html.replace('<link rel="stylesheet" href="style.css">',`<style>${await read('style.css')}</style>`).replace('<script src="app.js"></script>',`<script>${code}</script>`).replace('<!-- RESEARCH -->',`<pre class="research">${escape(await read('analysis.md'))}</pre>`);
+if(/<(?:script|link)[^>]+(?:src|href)=/i.test(html))throw Error('Unbundled runtime asset');
+await mkdir(new URL('dist/',root),{recursive:true});
+await writeFile(new URL('dist/exploded-atlas.html',root),html);
+console.log('Built standalone atlas; JavaScript parses; no external runtime scripts/styles.');

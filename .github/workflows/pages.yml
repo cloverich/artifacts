@@ -1,0 +1,60 @@
+name: Build and deploy artifacts
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: pages-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          lfs: true
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: |
+            motion-accent-lab/package-lock.json
+            scanground/package-lock.json
+      - name: Install locked dependencies
+        run: |
+          npm ci --ignore-scripts --prefix motion-accent-lab
+          npm ci --ignore-scripts --prefix scanground
+      - name: Check artifact mechanics
+        run: |
+          node --test exploded-atlas/mechanics.test.mjs motion-accent-lab/mechanics.test.mjs opentunnel-lab/timeline.test.mjs
+          node --check oxide-header-lab/app.js
+      - name: Build and check publication
+        run: node scripts/build-pages.mjs
+      - name: Upload Pages artifact
+        if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
+        uses: actions/upload-pages-artifact@v4
+        with:
+          path: _site
+
+  deploy:
+    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/configure-pages@v5
+      - name: Deploy
+        id: deployment
+        uses: actions/deploy-pages@v4

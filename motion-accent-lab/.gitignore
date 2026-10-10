@@ -1,0 +1,6 @@
+# Reviewed against github/gitignore/Node.gitignore; root covers secrets/caches.
+node_modules/
+dist/
+screenshots/
+research-tmp/
+*.log

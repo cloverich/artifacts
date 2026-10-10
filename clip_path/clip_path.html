@@ -1,0 +1,480 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TERMINAL // HISTORY_OVERWRITE</title>
+    
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=VT323&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            /* Brutalist Monochrome Palette */
+            --hex-bg: #050505;
+            --hex-main: #ff9d00; /* Deep Amber */
+            --hex-dim: #4a2e00;
+            --hex-alert: #ff9d00;
+            
+            --border-width: 2px;
+            --corner-clip: 24px;
+            --scanline-opacity: 0.04;
+            
+            --font-ui: 'Share Tech Mono', monospace;
+            --font-log: 'VT323', monospace;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            cursor: crosshair; /* The only cursor allowed */
+        }
+
+        body {
+            background-color: var(--hex-bg);
+            color: var(--hex-main);
+            font-family: var(--font-ui);
+            height: 100vh;
+            width: 100vw;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+
+        /* --- BACKGROUND ART & NOISE --- */
+        
+        .noise-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 100;
+            background: repeating-linear-gradient(
+                0deg,
+                rgba(0, 0, 0, 0.15),
+                rgba(0, 0, 0, 0.15) 1px,
+                transparent 1px,
+                transparent 2px
+            );
+            background-size: 100% 4px;
+        }
+
+        .crt-flicker {
+            animation: flicker 0.15s infinite;
+            opacity: 1;
+        }
+
+        @keyframes flicker {
+            0% { opacity: 0.97; }
+            50% { opacity: 1; }
+            100% { opacity: 0.98; }
+        }
+
+        .ascii-art {
+            position: absolute;
+            right: -5vw;
+            top: 50%;
+            transform: translateY(-50%);
+            font-family: monospace;
+            font-size: 10px;
+            line-height: 10px;
+            white-space: pre;
+            color: var(--hex-dim);
+            z-index: 0;
+            pointer-events: none;
+            user-select: none;
+            opacity: 0.5;
+            mix-blend-mode: screen;
+            filter: blur(0.5px);
+        }
+
+        /* --- CLIP PATH UTILS --- */
+        
+        /* The Clip Strategy:
+           Outer: Background Color + Clip Path (Defines the border shape)
+           Inner: Background Black + Clip Path (Defines the content area)
+           The gap between them creates the visual border.
+        */
+        .clipped-wrapper {
+            position: relative;
+            background: var(--hex-main);
+            /* Polygon: Top-Left, Top-Right, Bottom-Right (Cut), Bottom-Left */
+            clip-path: polygon(
+                0 0, 
+                100% 0, 
+                100% calc(100% - var(--corner-clip)), 
+                calc(100% - var(--corner-clip)) 100%, 
+                0 100%
+            );
+            padding: var(--border-width);
+            transition: filter 0.2s ease;
+        }
+
+        .clipped-inner {
+            background: var(--hex-bg);
+            width: 100%;
+            height: 100%;
+            /* Matching clip path for inner content */
+            clip-path: polygon(
+                0 0, 
+                100% 0, 
+                100% calc(100% - var(--corner-clip) + 1px), 
+                calc(100% - var(--corner-clip) + 1px) 100%, 
+                0 100%
+            );
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* --- MODAL --- */
+
+        .modal-container {
+            position: relative;
+            z-index: 10;
+            width: 90%;
+            max-width: 600px;
+            /* Filter drop-shadow allows the shadow to follow the clip-path shape! */
+            filter: drop-shadow(0 0 15px rgba(255, 157, 0, 0.15)); 
+        }
+
+        .modal-header {
+            padding: 1rem 1.5rem;
+            border-bottom: 1px solid var(--hex-dim);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.9rem;
+            letter-spacing: 2px;
+            background: rgba(255, 157, 0, 0.05);
+        }
+
+        .status-blink {
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            background: var(--hex-main);
+            margin-right: 10px;
+            animation: blink 1s steps(2, start) infinite;
+        }
+
+        @keyframes blink {
+            to { visibility: hidden; }
+        }
+
+        .modal-content {
+            padding: 2rem 1.5rem;
+            font-family: var(--font-log);
+            font-size: 1.2rem;
+            line-height: 1.4;
+        }
+
+        .log-entry {
+            margin-bottom: 1rem;
+            opacity: 0; /* JS will animate in */
+            animation: typeIn 0.5s forwards;
+            display: flex;
+        }
+
+        .log-prefix {
+            color: var(--hex-dim);
+            margin-right: 1rem;
+            min-width: 80px;
+        }
+        
+        .log-text {
+            color: var(--hex-main);
+        }
+
+        .log-highlight {
+            background: var(--hex-main);
+            color: var(--hex-bg);
+            padding: 0 4px;
+        }
+
+        @keyframes typeIn {
+            from { opacity: 0; transform: translateX(-5px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+
+        /* --- BUTTONS --- */
+
+        .modal-actions {
+            padding: 1.5rem;
+            display: flex;
+            gap: 1rem;
+            justify-content: flex-end;
+            border-top: 1px solid var(--hex-dim);
+        }
+
+        /* Button specifics: smaller clip */
+        .btn-wrapper {
+            --corner-clip: 10px; 
+            cursor: pointer;
+            height: 40px;
+            min-width: 120px;
+            position: relative;
+        }
+
+        .btn-inner {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-transform: uppercase;
+            font-weight: bold;
+            letter-spacing: 1px;
+            font-size: 0.9rem;
+            transition: background 0.2s, color 0.2s;
+        }
+
+        .btn-wrapper:hover {
+            filter: drop-shadow(0 0 5px var(--hex-main));
+        }
+
+        .btn-wrapper:hover .btn-inner {
+            background: var(--hex-main);
+            color: var(--hex-bg);
+        }
+
+        .btn-deny {
+            --hex-main: #555; /* Override for deny button to make it look disabled/passive or just brutalist grey */
+        }
+        
+        /* But let's keep it mono - use outlines vs fills instead? 
+           User asked for monochromatic. We stick to amber. 
+           We will use opacity for hierarchy. 
+        */
+
+        .btn-secondary {
+            opacity: 0.6;
+        }
+        .btn-secondary:hover {
+            opacity: 1;
+        }
+
+        /* --- GLITCH EFFECTS --- */
+        .glitch-text {
+            position: relative;
+        }
+        
+        .glitch-text::before,
+        .glitch-text::after {
+            content: attr(data-text);
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: var(--hex-bg);
+        }
+
+        .glitch-text::before {
+            left: 2px;
+            text-shadow: -1px 0 #ff0000;
+            clip: rect(24px, 550px, 90px, 0);
+            animation: glitch-anim-2 3s infinite linear alternate-reverse;
+        }
+
+        .glitch-text::after {
+            left: -2px;
+            text-shadow: -1px 0 #00ff00;
+            clip: rect(85px, 550px, 140px, 0);
+            animation: glitch-anim 2.5s infinite linear alternate-reverse;
+        }
+
+        @keyframes glitch-anim {
+            0% { clip: rect(14px, 9999px, 127px, 0); }
+            20% { clip: rect(98px, 9999px, 4px, 0); }
+            40% { clip: rect(66px, 9999px, 86px, 0); }
+            60% { clip: rect(2px, 9999px, 14px, 0); }
+            80% { clip: rect(56px, 9999px, 40px, 0); }
+            100% { clip: rect(38px, 9999px, 114px, 0); }
+        }
+        @keyframes glitch-anim-2 {
+            0% { clip: rect(65px, 9999px, 100px, 0); }
+            20% { clip: rect(4px, 9999px, 83px, 0); }
+            40% { clip: rect(90px, 9999px, 2px, 0); }
+            60% { clip: rect(15px, 9999px, 70px, 0); }
+            80% { clip: rect(25px, 9999px, 5px, 0); }
+            100% { clip: rect(9px, 9999px, 60px, 0); }
+        }
+
+        /* --- RESPONSIVE --- */
+        @media (max-width: 768px) {
+            .ascii-art {
+                opacity: 0.1;
+                right: -100px;
+            }
+            .modal-container {
+                width: 95%;
+            }
+        }
+    </style>
+</head>
+<body class="crt-flicker">
+
+    <div class="noise-overlay"></div>
+
+    <!-- Background ASCII Art (Single Subject: The Eye) -->
+    <div class="ascii-art">
+             ..,:;
+          '.,;::::;,.
+        .;:;,,,,,,,;:;.
+       .;;,.       .,;;.
+      .;;.           .;;.
+     .;;.             .;;.
+    .;;.               .;;.
+    ;;.                 .;;
+   .;;                   ;;.
+   ;;.                   ;;.
+   ;;.       .,:;,       ;;.
+   ;;.     .,:;;;;;,.    ;;.
+   ;;.    .;::;;;;;::.   ;;.
+   ;;.    ;;;:'   ':;;   ;;.
+   ;;.    ;;;.     .;;   ;;.
+   ;;.    ;;;.     .;;   ;;.
+   ;;.    ';;;.   .;;;   ;;.
+   ;;.     ';;;;;;;;;'   ;;.
+   ;;.       ':::::'     ;;.
+   ;;.                   ;;.
+   ;;.                   ;;.
+   .;;.                 .;;
+    ;;.                 ;;.
+    .;;.               .;;
+     .;;.             .;;
+      .;;.           .;;
+       .;;,.       .,;;
+         ';;;;;;;;;;'
+    </div>
+
+    <!-- Main Modal -->
+    <div class="clipped-wrapper modal-container">
+        <div class="clipped-inner">
+            
+            <div class="modal-header">
+                <div><span class="status-blink"></span>SYS_AUDIT_LOG_09</div>
+                <div>ID: 0xFA4B</div>
+            </div>
+
+            <div class="modal-content" id="log-container">
+                <!-- Content injected by JS for effect -->
+            </div>
+
+            <div class="modal-actions">
+                <!-- Deny Button -->
+                <div class="clipped-wrapper btn-wrapper btn-secondary" onclick="handleAction('deny')">
+                    <div class="clipped-inner btn-inner">
+                        PURGE
+                    </div>
+                </div>
+                
+                <!-- Approve Button -->
+                <div class="clipped-wrapper btn-wrapper" onclick="handleAction('approve')">
+                    <div class="clipped-inner btn-inner">
+                        ASSIMILATE
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+        // Log Data simulating the corruption of the genre
+        const logs = [
+            { id: '0x01', text: 'Accessing core archives...' },
+            { id: '0x02', text: 'Subject: "CYBERPUNK"' },
+            { id: '0x03', text: 'Original Parameters: <span class="log-highlight">High Tech / Low Life</span>. Socio-economic critique. Dystopian warning.' },
+            { id: '0x04', text: '...Scanning timeline...' },
+            { id: '0x05', text: 'ANOMALY DETECTED: Corporate absorption complete.' },
+            { id: '0x06', text: 'Substance deleted. Surface-level aesthetics retained.' },
+            { id: '0x07', text: 'Warning: Rebellion has been packaged as a product.' },
+            { id: '0x08', text: 'Query: Accept commodified reality?' }
+        ];
+
+        const container = document.getElementById('log-container');
+        let index = 0;
+        let typeTimeout;
+
+        function renderLog() {
+            if (index < logs.length) {
+                const entry = logs[index];
+                const div = document.createElement('div');
+                div.className = 'log-entry';
+                div.style.animationDelay = `${index * 0.1}s`; // Stagger effect
+                
+                div.innerHTML = `
+                    <div class="log-prefix">[${entry.id}]</div>
+                    <div class="log-text">${entry.text}</div>
+                `;
+                
+                container.appendChild(div);
+                index++;
+                
+                // Random typing variance
+                typeTimeout = setTimeout(renderLog, Math.random() * 300 + 100);
+            }
+        }
+
+        // Start rendering after a brief delay
+        typeTimeout = setTimeout(renderLog, 500);
+
+        function resetSystem() {
+            const content = document.querySelector('.modal-content');
+            content.innerHTML = '';
+            index = 0;
+            renderLog();
+        }
+
+        function handleAction(action) {
+            clearTimeout(typeTimeout); // Stop typing if interrupted
+            const header = document.querySelector('.modal-header');
+            const content = document.querySelector('.modal-content');
+            
+            if (action === 'approve') {
+                // Flash animation
+                document.body.style.backgroundColor = 'var(--hex-main)';
+                setTimeout(() => {
+                    document.body.style.backgroundColor = 'var(--hex-bg)';
+                    content.innerHTML = `
+                        <div class="log-entry" style="margin-top: 2rem; color: var(--hex-main)">
+                            <div class="glitch-text" data-text="ASSIMILATION COMPLETE">ASSIMILATION COMPLETE</div>
+                        </div>
+                        <div class="log-entry">
+                            Please consume next product.
+                        </div>
+                    `;
+                }, 100);
+            } else {
+                // Deny/Purge animation
+                content.innerHTML = '';
+                let count = 0;
+                const purgeInterval = setInterval(() => {
+                    count++;
+                    const div = document.createElement('div');
+                    div.className = 'log-entry';
+                    div.style.color = '#ff0000'; // Hardcoded error red for contrast? No, keep mono.
+                    // Actually, let's keep it amber but chaotic.
+                    div.innerText = `SYS_KILL // PID ${Math.floor(Math.random() * 9999)}`;
+                    content.appendChild(div);
+                    content.scrollTop = content.scrollHeight;
+                    
+                    if (count > 10) {
+                        clearInterval(purgeInterval);
+                        content.innerHTML += `<br><div class="glitch-text" data-text="SYSTEM HALTED">SYSTEM HALTED</div>`;
+                        
+                        // Reset after 5s
+                        setTimeout(resetSystem, 5000);
+                    }
+                }, 100);
+            }
+        }
+    </script>
+</body>
+</html>

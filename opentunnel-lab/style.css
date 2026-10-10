@@ -1,0 +1,414 @@
+:root {
+  color-scheme:dark;
+  --bg:#101010;
+  --ink:#e9e5dc;
+  --muted:#939088;
+  --line:#34332f;
+  --hot:#ff4937;
+  font-family:ui-monospace,SFMono-Regular,Consolas,monospace
+}
+* {
+  box-sizing:border-box
+}
+body {
+  margin:0;
+  background:var(--bg);
+  color:var(--ink)
+}
+main {
+  max-width:1280px;
+  margin:auto;
+  padding:0 44px
+}
+a {
+  color:inherit;
+  text-underline-offset:4px
+}
+button,input,select {
+  font:inherit
+}
+button,select {
+  border:1px solid var(--line);
+  background:#181818;
+  color:var(--ink);
+  padding:10px 14px;
+  border-radius:2px
+}
+button {
+  cursor:pointer
+}
+button:hover,select:hover {
+  border-color:var(--hot)
+}
+button[aria-pressed=true] {
+  color:var(--hot);
+  border-color:var(--hot)
+}
+:focus-visible {
+  outline:2px solid var(--hot);
+  outline-offset:4px
+}
+.mast {
+  height:76px;
+  border-bottom:1px solid var(--line);
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  font-size:11px;
+  letter-spacing:.08em
+}
+.mast a {
+  text-decoration:none
+}
+.brand span {
+  color:var(--muted);
+  margin-left:18px
+}
+.intro {
+  padding:54px 0 40px
+}
+.eyebrow {
+  font-size:10px;
+  letter-spacing:.11em;
+  color:var(--hot)
+}
+h1 {
+  font-family:Impact,'Arial Narrow',sans-serif;
+  font-stretch:condensed;
+  font-size:clamp(56px,8.4vw,114px);
+  line-height:.98;
+  letter-spacing:-.025em;
+  margin:22px 0
+}
+h1 span {
+  color:var(--hot);
+  margin-left:.15em
+}
+.intro p {
+  font-size:14px;
+  line-height:1.7;
+  color:var(--muted);
+  margin:22px 0 0
+}
+.transport {
+  position:sticky;
+  top:0;
+  z-index:3;
+  background:var(--bg);
+  display:flex;
+  gap:10px;
+  align-items:center;
+  padding:18px 0;
+  border-top:1px solid var(--line);
+  border-bottom:1px solid var(--line);
+  font-size:11px;
+  flex-wrap:wrap
+}
+.transport #play {
+  background:var(--hot);
+  color:#101010;
+  border-color:var(--hot);
+  min-width:85px
+}
+.volume {
+  display:flex;
+  gap:10px;
+  align-items:center;
+  color:var(--muted)
+}
+.volume input {
+  width:85px
+}
+#runtime {
+  margin-left:auto;
+  color:var(--muted);
+  font-size:10px
+}
+.study {
+  padding-top:32px
+}
+.section-head {
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  padding-bottom:17px;
+  gap:16px
+}
+h2 {
+  font-size:11px;
+  font-weight:500;
+  letter-spacing:.09em;
+  margin:0
+}
+h2 span {
+  color:var(--hot);
+  margin-right:14px
+}
+.badge {
+  font-size:9px;
+  color:var(--muted);
+  letter-spacing:.06em
+}
+.hero-field {
+  position:relative;
+  height:390px;
+  background:#090909;
+  overflow:hidden;
+  border:1px solid var(--line)
+}
+#tunnel {
+  width:100%;
+  height:100%;
+  display:block
+}
+.field-caption {
+  position:absolute;
+  bottom:0;
+  left:0;
+  right:0;
+  display:flex;
+  justify-content:space-between;
+  padding:17px 20px;
+  font-size:9px;
+  letter-spacing:.09em;
+  color:#ffb09d;
+  background:linear-gradient(transparent,#101010aa)
+}
+.controls {
+  display:flex;
+  gap:26px;
+  flex-wrap:wrap;
+  padding:18px 0;
+  border-bottom:1px solid var(--line);
+  font-size:11px
+}
+.controls label {
+  display:flex;
+  align-items:center;
+  gap:10px;
+  color:var(--muted)
+}
+.controls select {
+  font-size:11px;
+  padding:7px 10px
+}
+.controls input[type=range] {
+  width:100px
+}
+.controls output {
+  font-size:10px;
+  min-width:40px;
+  color:var(--ink)
+}
+input {
+  accent-color:var(--hot)
+}
+.explanation {
+  max-width:760px;
+  color:var(--muted);
+  font-size:12px;
+  line-height:1.8;
+  padding:2px 0 16px
+}
+.explanation b {
+  color:var(--ink);
+  font-weight:400
+}
+.diagram {
+  position:relative;
+  background:#0b0b0b;
+  border:1px solid var(--line);
+  padding:34px 0 40px
+}
+.diagram canvas {
+  position:absolute;
+  left:0;
+  top:34px;
+  width:100%;
+  height:calc(100% - 74px)
+}
+#scene {
+  position:relative;
+  display:block;
+  width:100%;
+  height:auto;
+  color:#77766e
+}
+.wire {
+  stroke:#383831
+}
+.svg-labels {
+  fill:#b9b5ab;
+  font-size:11px
+}
+.svg-labels text:nth-last-child(-n+3) {
+  fill:#75736c;
+  font-size:9px;
+  letter-spacing:1px
+}
+.event-pill {
+  position:absolute;
+  left:20px;
+  bottom:15px;
+  display:flex;
+  gap:9px;
+  align-items:center;
+  font-size:10px;
+  color:var(--muted)
+}
+#event-dot {
+  background:var(--hot);
+  width:4px;
+  height:4px;
+  border-radius:50%
+}
+.timeline {
+  display:flex;
+  gap:20px;
+  align-items:center;
+  padding:18px 0;
+  border-bottom:1px solid var(--line);
+  font-size:10px
+}
+.timeline label {
+  color:var(--muted);
+  white-space:nowrap
+}
+.timeline input {
+  flex:1;
+  min-width:60px
+}
+.timeline output {
+  white-space:nowrap;
+  font-variant-numeric:tabular-nums
+}
+.layers {
+  gap:26px
+}
+.layers input {
+  margin:0
+}
+.notes {
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:36px;
+  margin:32px 0 50px;
+  padding-top:28px;
+  border-top:1px solid var(--line)
+}
+h3 {
+  font-family:Arial,sans-serif;
+  font-size:22px;
+  font-weight:400;
+  letter-spacing:-.03em;
+  margin:16px 0 10px
+}
+.notes p {
+  font-size:11px;
+  line-height:1.9;
+  color:var(--muted)
+}
+footer {
+  display:flex;
+  justify-content:space-between;
+  padding:22px 0 30px;
+  font-size:9px;
+  gap:20px;
+  color:var(--muted);
+  border-top:1px solid var(--line)
+}
+.shader-fallback {
+  background:repeating-radial-gradient(ellipse at 50% 45%,#ff4937 0 4px,#19100c 5px 16px)
+}
+@media(max-width:760px) {
+  main {
+  padding:0 20px
+}
+.intro {
+  padding-top:34px
+}
+h1 {
+  font-size:clamp(45px,10.4vw,76px)
+}
+.hero-field {
+  height:310px
+}
+.controls {
+  gap:18px
+}
+#runtime {
+  width:100%;
+  margin:0
+}
+.notes {
+  grid-template-columns:1fr;
+  gap:12px
+}
+.badge {
+  font-size:8px
+}
+.section-head {
+  align-items:flex-start
+}
+.diagram {
+  padding-top:24px
+}
+.diagram canvas {
+  top:24px;
+  height:calc(100% - 64px)
+}
+#scene {
+  overflow:visible
+}
+.svg-labels {
+  font-size:26px
+}
+.svg-labels text:nth-last-child(-n+3) {
+  font-size:24px;
+  letter-spacing:0
+}
+.timeline {
+  gap:10px
+}
+.timeline label {
+  font-size:8px
+}
+.timeline output {
+  font-size:9px
+}
+.field-caption {
+  font-size:7px;
+  padding:14px 10px
+}
+footer {
+  flex-wrap:wrap
+}
+
+}
+@media(max-width:400px) {
+  main {
+  padding:0 14px
+}
+.hero-field {
+  height:260px
+}
+.controls input[type=range] {
+  width:85px
+}
+.volume {
+  font-size:10px
+}
+.mast {
+  height:62px
+}
+.brand span {
+  margin-left:8px
+}
+.layers {
+  gap:15px
+}
+.layers label {
+  font-size:10px
+}
+
+}

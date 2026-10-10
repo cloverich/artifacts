@@ -1,0 +1,37 @@
+'use strict';
+const studies = [
+ {name:'Glass boundaries',title:'Opening the black box of machine intelligence',deck:'A security story deserves a field that feels inspectable: boundaries emerge, drift, and leave room for the words.',color:'#b69546',tech:'VORONOI EDGES / INSPIRED BY GLASSWING',description:'Each character samples the difference between its two nearest moving sites. Small differences trace the boundaries. The sites ease into slow motion; the grid and headline stay fixed.'},
+ {name:'Rising contour',title:'The small team building its own cloud',deck:'An imaginary infrastructure launch. A purple contour climbs through a field of increasingly sparse characters.',color:'#b084c5',tech:'NOISY CONTOUR / INSPIRED BY SERIES D',description:'A smooth, multi-frequency curve becomes block characters at its edge and stippled shading below. The initial travel decelerates, leaving a quietly changing landscape.'},
+ {name:'Rotating disks',title:'What if we built the computer from scratch?',deck:'An engineering deep dive rendered as an abstract solid: two disks turning through a monospaced field.',color:'#5ba887',tech:'PROJECTED DISKS / INSPIRED BY SERIES B',description:'Two ellipses model rotating disks. Their outlines and shaded faces use different glyphs. This study uses analytic projection rather than Oxide’s ray-marching implementation.'},
+ {name:'Bitmap numbers',title:'A database that fits in 200 kilobytes',deck:'A hypothetical Show HN launch with big bitmap numerals. The digits scramble briefly, then resolve into a calm pattern.',color:'#599978',tech:'BITMAP GLYPHS / INSPIRED BY SERIES C',description:'A tiny digit font expands into a second character grid. Numbers scramble for three seconds, then settle into repeating 200s. New seed replays the introduction.'},
+ {name:'Packet routes',title:'I built a network you can watch think',deck:'A fictional Show HN: a transparent router that makes every hop visible. Small signals travel along fixed orthogonal routes.',color:'#6fa9c1',tech:'ORTHOGONAL PATHS / ORIGINAL HN PERMUTATION',description:'Static circuit paths carry moving packet markers. The same separation of infrastructure and activity suits networking, distributed systems, observability, or a home-lab write-up.'},
+ {name:'Cellular garden',title:'Life finds a way in 40 lines of C',deck:'A fictional programming experiment: a cellular automaton becomes the illustration, while a quiet headline introduces the story.',color:'#bd965e',tech:'CELLULAR AUTOMATON / ORIGINAL HN PERMUTATION',description:'A seeded Conway Life field advances at six generations per second. Stable islands and moving structures become typographic texture. It reseeds periodically to keep the experiment alive.'}
+];
+const $=id=>document.getElementById(id), field=$('field'), demo=$('demo');
+let active=0,seed=17,time=0,last=0,cols=144,paused=matchMedia('(prefers-reduced-motion: reduce)').matches,visible=true,life=[],generation=-1;
+const reduced=matchMedia('(prefers-reduced-motion: reduce)');
+function hash(x){const n=Math.sin(x*127.1+seed*31.7)*43758.5453;return n-Math.floor(n)}
+function initLife(){life=Array.from({length:cols*24},(_,i)=>hash(i)>.72?1:0);generation=-1}
+function select(i){active=i;time=0;initLife();const s=studies[i];document.documentElement.style.setProperty('--accent',s.color);$('headline').textContent=s.title;$('deck').textContent=s.deck;$('technique').textContent=s.tech;$('description').textContent=s.description;document.querySelectorAll('#studies button').forEach((b,j)=>b.setAttribute('aria-pressed',String(i===j)));draw()}
+studies.forEach((s,i)=>{const b=document.createElement('button');b.type='button';b.innerHTML=`<span>0${i+1}</span>${s.name}`;b.addEventListener('click',()=>select(i));$('studies').appendChild(b)});
+const bitmaps=['111101101101111','010110010010111','111001111100111','111001111001111','101101111001001','111100111001111','111100111101111','111001001001001','111101111101111','111101111001111'];
+function noise(x){return Math.sin(x*.09+seed)*2+Math.sin(x*.23+seed)*1.1+Math.sin(x*.61)*.4}
+function updateLife(){const target=Math.floor(time*6);if(target===generation)return;generation=target;const next=life.map((v,i)=>{const x=i%cols,y=Math.floor(i/cols);let n=0;for(let dy=-1;dy<=1;dy++)for(let dx=-1;dx<=1;dx++)if(dx||dy)n+=life[((y+dy+24)%24)*cols+(x+dx+cols)%cols];return n===3||(v&&n===2)?1:0});life=next;if(target>0&&target%150===0)initLife()}
+function draw(){const rows=[];const ramp=' .,-~:;';const ease=1-Math.exp(-time*1.1),phase=ease*8+time*.08;const sites=Array.from({length:12},(_,i)=>({x:(.5+.42*Math.sin(hash(i)*6.28+phase*.1+i))*cols,y:12+10*Math.cos(hash(i+14)*6.28+phase*.12+i)}));if(active===5)updateLife();for(let y=0;y<24;y++){let line='';for(let x=0;x<cols;x++){let ch=' ';
+if(active===0){let a=1e9,b=1e9;for(const p of sites){const d=Math.hypot(x-p.x,(y-p.y)*3.3);if(d<a){b=a;a=d}else if(d<b)b=d}const v=Math.min(7,Math.floor((b-a)*3/(cols*.15)*7));ch=v===7?' ':ramp[v]}
+if(active===1){const xx=x+ease*22+time*.45;const edge=14-x/cols*14+noise(xx);const d=y-edge;ch=Math.abs(d)<.65?'▄':d>0?'#:·'[Math.min(2,Math.floor(d*.45))]:' '}
+if(active===2){for(let i=0;i<2;i++){const cx=cols*(i?.69:.32),cy=i?8:14;const rx=cols*(i?.24:.17),ry=2+5*Math.abs(Math.sin(time*.12+i*1.3));const q=((x-cx)/rx)**2+((y-cy)/ry)**2;if(q<1)ch=q>.82?'|':((x+y)%3===0?'–':' ')}if(ch===' '&&x%3===0&&y%2===0)ch='.'}
+if(active===3){const scale=cols===72?2:3,cx=Math.floor(x/scale),cy=Math.floor(y/scale),bx=cx%4,by=cy%6;const cell=Math.floor(cx/4);const digit=time<3?Math.floor(hash(cell+Math.floor(time*10))*10):[2,0,0][cell%3];ch=bx<3&&by<5&&bitmaps[digit][by*3+bx]==='1'?'▇':'.'}
+if(active===4){for(let i=0;i<5;i++){const yy=3+i*4,bend=Math.floor(cols*(.25+i*.1)),end=yy+(i%2?2:-2);if((x<bend&&y===yy)||(x>=bend&&y===end))ch='─';if(x===bend&&y>=Math.min(yy,end)&&y<=Math.max(yy,end))ch='│';const packet=Math.floor((time*(7+i)+hash(i)*cols)%cols);if(x===packet&&y===(x<bend?yy:end))ch='◆'}}
+if(active===5)ch=life[y*cols+x]?(x%2?'▪':'#'):(x%4===0&&y%2===0?'.':' ');
+line+=ch}rows.push(line)}field.textContent=rows.join('\n');$('metrics').textContent=`${cols} × 24 cells · real DOM text · independent grid + headline`}
+function motionUI(){$('motion').textContent=paused?'Play motion':'Pause motion';$('motion').setAttribute('aria-pressed',String(paused))}
+$('motion').addEventListener('click',()=>{paused=!paused;motionUI()});reduced.addEventListener('change',e=>{paused=e.matches;motionUI()});
+$('seed').addEventListener('click',()=>{seed+=19;select(active)});
+$('structure').addEventListener('change',e=>{demo.classList.toggle('editorial',e.target.value==='editorial');draw()});
+for(const [control,selector] of [['show-field','.ascii'],['show-grid','.grid'],['show-title','.title-wrap']])$(control).addEventListener('change',e=>document.querySelector(selector).classList.toggle('hidden-layer',!e.target.checked));
+function resize(){const next=innerWidth<=700?72:144;if(next!==cols){cols=next;initLife()}draw()}addEventListener('resize',resize);
+new IntersectionObserver(entries=>{visible=entries[0].isIntersecting},{threshold:0}).observe(demo);
+document.addEventListener('visibilitychange',()=>{last=0});
+function tick(now){const dt=last?Math.min((now-last)/1000,.1):0;last=now;if(!paused&&visible&&!document.hidden&&$('structure').value==='hero'){time+=dt;if(now-(tick.paint||0)>1000/30){draw();tick.paint=now}}requestAnimationFrame(tick)}
+resize();select(0);motionUI();requestAnimationFrame(tick);

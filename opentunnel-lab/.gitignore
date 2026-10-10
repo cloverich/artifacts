@@ -1,0 +1,8 @@
+# Browser experiment with a Node-built standalone HTML. Baseline: github/gitignore Node.gitignore.
+# Root rules cover secrets, dependencies, caches, build output, and logs.
+screenshots/
+research-cache/
+.preview.pid
+
+# Reproducible standalone output; commit its source and build script.
+dist/

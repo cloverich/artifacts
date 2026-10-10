@@ -1,0 +1,4 @@
+# Downloaded feeds and generated results; preserve source OPML and scripts.
+data/shows/
+data/opml/
+podcast_validation_results.json

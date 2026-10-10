@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Motion Accent Lab</title><!--STYLE--></head>
+<body>
+<header><a href="#top" class="brand">a / artifacts</a><span>FIELD STUDY 03 · OCT 2026</span><a href="#evidence">Reference notes ↗</a></header>
+<main id="top">
+<div class="intro"><p class="eyebrow">ANIME.JS × ILLUSTRATION × CEL LIGHTING</p><h1>A little motion.<br>A lot of character.</h1><p class="lede">The drawing gives it personality. The timeline gives it life.<br>Explore how a spectacular demo becomes a small, useful accent.</p></div>
+<section class="lab" aria-labelledby="lab-title">
+<div class="scene-column">
+<div class="section-label"><h2 id="lab-title">01 / Dispatch station</h2><span>ORIGINAL SVG · ANIME.JS 4.5.0</span></div>
+<div class="art" id="art">
+<div class="art-note">FIXED VIEW / AUTHORED COLOR REGIONS</div>
+<svg id="station" viewBox="0 0 600 440" role="img" aria-label="An original isometric dispatch machine sends a paper document, then stamps it complete">
+<defs><pattern id="dots" width="16" height="16" patternUnits="userSpaceOnUse"><circle cx="1" cy="1" r="1" fill="currentColor" opacity=".14"/></pattern></defs>
+<rect width="600" height="440" fill="url(#dots)" stroke="none"/>
+<g id="shadow" class="noink" fill="var(--ink)" opacity=".12"><ellipse cx="305" cy="358" rx="153" ry="37"/></g>
+<g id="machine" stroke="var(--ink)" stroke-width="2.2" stroke-linejoin="round">
+<g id="base"><path fill="var(--mid)" d="M123 312 320 228 492 299 294 392Z"/><path fill="var(--shade)" d="M294 392 492 299 492 316 294 409Z"/><path fill="var(--light)" d="M123 312 294 392 294 409 123 329Z"/><path fill="none" d="m140 314 151 69 181-83"/></g>
+<g id="tower"><path fill="var(--light)" d="M203 155 325 99 409 138 286 194Z"/><path fill="var(--mid)" d="M203 155 286 194 286 334 203 294Z"/><path fill="var(--shade)" d="M286 194 409 138 409 276 286 334Z"/>
+<path fill="var(--ink)" d="m216 179 57 27v63l-57-27Z"/><path fill="var(--screen)" d="m224 192 40 19v42l-40-19Z"/>
+<path class="screenline" d="m232 210 22 10m-22 3 15 7" fill="none" stroke="var(--light)" stroke-width="2"/>
+<path fill="none" d="m216 277 49 23m-49-15 49 23"/>
+<path fill="var(--accent)" d="m339 145 34-16 17 8-34 16Z"/>
+<path fill="none" d="m304 205 86-39m-86 47 86-39m-86 48 86-39m-86 49 86-39"/>
+<path fill="var(--ink)" d="m301 290 90-42v12l-90 42Z"/><circle cx="276" cy="304" r="4" fill="var(--accent)"/>
+</g>
+<g id="paper"><path fill="var(--light)" d="m305 268 77-35 61 28-77 36Z"/><path fill="var(--mid)" d="m366 297 77-36v5l-77 36Z"/><path fill="none" d="m327 269 44-20m-31 26 44-20m-31 26 28-13"/><path id="drawline" fill="none" stroke="var(--accent)" stroke-width="4" pathLength="1" d="m349 279 14 4 24-22"/></g>
+<g id="stamp"><circle cx="440" cy="206" r="32" fill="var(--accent)"/><path fill="none" stroke="var(--light)" stroke-width="5" d="m424 206 11 11 21-23"/></g>
+<g id="rays" fill="none" stroke="var(--accent)" stroke-width="3"><path d="m448 160 3-12m29 28 9-8m-74-5-7-9"/></g>
+</g></svg>
+<div class="art-footer"><span id="phase">Ready to dispatch</span><span id="frame-label">CONTINUOUS POSE</span></div>
+</div>
+<div class="palette" role="group" aria-label="Illustration theme"><button data-theme="paper" aria-pressed="true"><i class="swatch paper"></i>Paper</button><button data-theme="oxide" aria-pressed="false"><i class="swatch oxide"></i>Oxide</button><button data-theme="blueprint" aria-pressed="false"><i class="swatch blueprint"></i>Blueprint</button></div>
+</div>
+<div class="inspector">
+<p class="eyebrow">THE CHOREOGRAPHY</p><h3>One event. Four gestures.</h3><p>Send the sheet, draw the mark, pop the seal, settle the machine. Anime.js interpolates a small state object; SVG draws the result.</p>
+<div class="transport"><button id="play" class="primary">Play accent ↗</button><button id="pause" disabled>Pause</button><button id="reset" aria-label="Reset timeline">↺</button></div>
+<label class="scrub-label" for="seek">Timeline <output id="time">0 / 1800 ms</output></label><input id="seek" type="range" min="0" max="1800" value="0" step="1">
+<div class="tracks"><div><span>Sheet</span><i style="--start:0%;--end:39%"></i></div><div><span>Mark</span><i style="--start:30%;--end:58%"></i></div><div><span>Seal</span><i style="--start:53%;--end:77%"></i></div><div><span>Settle</span><i style="--start:75%;--end:100%"></i></div><b id="playhead"></b></div>
+<div class="options"><label><input id="stepped" type="checkbox"> Sample poses at 12 fps</label><label><input id="ink" type="checkbox" checked> Ink outlines</label><label><input id="regions" type="checkbox" checked> Flat color regions</label><label><input id="reduce" type="checkbox"> Reduced-motion preview</label></div>
+<p class="small" id="motion-note">A one-shot accent settles after 1.8 seconds. No idle loop.</p>
+<details><summary>Inspect the moving values</summary><pre id="values"></pre><pre>createTimeline({ autoplay: false })
+  .add(pose, { sheet: [0, 1], duration: 700 }, 0)
+  .add(pose, { mark: [0, 1], duration: 500 }, 540);
+
+// One owner of time; explicit rendering.
+timeline.seek(sampledTime, true);
+renderSVG(pose);</pre></details>
+</div></section>
+<section class="everyday"><div><p class="eyebrow">IN EVERYDAY WORK</p><h2>A moment, not a moving wallpaper.</h2><p>Use this on a successful export or a finished task. Let the illustration celebrate; let plain text carry the actual result.</p></div><div class="product" id="product-card"><div class="file-icon" id="mini" aria-hidden="true"></div><div><strong>Field notes.pdf</strong><p id="product-status" role="status" aria-live="polite">Ready for a demo export</p></div><button id="export">Try export</button><small>Simulated interaction · no file is generated</small></div></section>
+<section class="lighting" aria-labelledby="light-title"><div><p class="eyebrow">02 / THE CEL RECIPE</p><h2 id="light-title">Same shape.<br>Different light.</h2><p>Cel shading turns a continuous light response into a few flat bands. Outlines are a separate layer. Neither effect comes from the animation engine.</p><label for="angle">Light direction <output id="angle-value">−35°</output></label><input id="angle" type="range" min="-180" max="180" value="-35"><label for="bands">Lighting bands <output id="bands-value">4</output></label><input id="bands" type="range" min="2" max="6" value="4"><label class="check"><input id="sphere-ink" type="checkbox" checked> Add a silhouette outline</label></div><div class="sphere-panel"><canvas id="spheres" width="680" height="300" role="img" aria-label="Two spheres with identical normals: continuous lighting on the left, discrete cel lighting bands on the right"></canvas><div class="sphere-labels"><span>CONTINUOUS</span><span>QUANTIZED</span></div><pre>light = max(0, dot(normal, direction))
+band  = round(light × (N − 1)) / (N − 1)
+color = base × (0.22 + 0.78 × band)</pre><p class="small">Canvas 2D computes an analytic sphere here. Vesper uses mesh normals and a custom four-step WebGL shader. Its thresholds differ from this evenly spaced teaching ramp.</p></div></section>
+<section id="evidence"><p class="eyebrow">03 / WHAT THE REFERENCES ESTABLISH</p><div class="evidence-grid"><article><h3>Anime.js</h3><p>Motion orchestration: sequences, easing, object tweening, SVG helpers. Its elaborate showcase also has a rendering layer.</p><a href="https://animejs.com/documentation/timeline/">Timeline documentation ↗</a></article><article><h3>Vesper / Avocet</h3><p>Inspected client scene: Three.js, procedural geometry, stepped shaders, edge lines, wear, instancing, and a film pass.</p><a href="https://labs.sntx.co/experiments/vesper-drift/materials.js">The material source ↗</a></article><article><h3>The two X clips</h3><p>One is a space/deep-time film; the other shows themed isometric figures. Sampled playback does not establish either production stack.</p><a href="https://x.com/antic/status/2108582512960368715">antic ↗</a> · <a href="https://x.com/wheresryan22/status/2108172796367106142">Ryan ↗</a></article></div>
+<div class="choice"><h3>Choose the smallest useful stack.</h3><p><b>Simple state cue:</b> CSS or native Web Animations. <b>Coordinated illustrated accent:</b> SVG + Anime.js. <b>Moving camera and dynamic cel light:</b> Three.js + toon materials. A renderer and a timeline can be combined when each earns its place.</p></div>
+<details><summary>Full source study, tradeoffs & uncertainties</summary><!--RESEARCH--></details><details><summary>Bundled dependency license</summary><!--LICENSE--></details></section>
+<footer>Original study & artwork · 9 October 2026 · Offline runtime · No copied demo assets</footer>
+</main><!--SCRIPTS--></body></html>

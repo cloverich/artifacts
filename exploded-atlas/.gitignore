@@ -1,0 +1,5 @@
+# Reviewed against github/gitignore/Node.gitignore and root baseline.
+# Dependency-free Node packaging: source is tracked, bundle and QA are not.
+dist/
+qa/
+research-cache/

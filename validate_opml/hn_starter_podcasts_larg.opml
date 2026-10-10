@@ -1,0 +1,120 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<opml version="2.0">
+  <head>
+    <title>HN‑Adjacency: Tech, Dev, AI, Security, Product (Starter Pack)</title>
+  </head>
+  <body>
+
+    <outline text="Tech News & Culture">
+      <outline text="The Vergecast" xmlUrl="https://www.theverge.com/the-vergecast-podcast/rss/index.xml"/>
+      <outline text="Decoder (The Verge)" xmlUrl="https://www.theverge.com/the-decoder-podcast/rss/index.xml"/>
+      <outline text="Hard Fork" xmlUrl="https://rss.art19.com/hard-fork"/>
+      <outline text="Waveform: The MKBHD Podcast" xmlUrl="https://feeds.simplecast.com/MKbvMd0l"/>
+      <outline text="Daily Tech News Show" xmlUrl="https://dtns.com/feed/daily-tech-news-show/"/>
+      <outline text="Darknet Diaries" xmlUrl="https://darknetdiaries.com/feed.xml"/>
+      <outline text="Risky Business" xmlUrl="https://risky.biz/feeds/risky-business/"/>
+      <outline text="Acquired" xmlUrl="https://feeds.simplecast.com/6Gx7u5fR"/>
+      <outline text="All-In Podcast" xmlUrl="https://allinpodcast.co/feed.xml"/>
+      <outline text="Exponent" xmlUrl="https://exponent.fm/feed/"/>
+      <outline text="EconTalk" xmlUrl="https://feeds.simplecast.com/IE5G7lQH"/>
+      <outline text="Planet Money" xmlUrl="https://feeds.npr.org/510289/podcast.xml"/>
+      <outline text="The Indicator from Planet Money" xmlUrl="https://feeds.npr.org/510325/podcast.xml"/>
+      <outline text="a16z Podcast" xmlUrl="https://feeds.simplecast.com/8V0rQTM5"/>
+    </outline>
+
+    <outline text="General Software / Engineering">
+      <outline text="The Changelog" xmlUrl="https://changelog.com/podcast/feed"/>
+      <outline text="Changelog News" xmlUrl="https://changelog.com/news/feed"/>
+      <outline text="JS Party" xmlUrl="https://changelog.com/jsparty/feed"/>
+      <outline text="Go Time" xmlUrl="https://changelog.com/gotime/feed"/>
+      <outline text="Ship It!" xmlUrl="https://changelog.com/shipit/feed"/>
+      <outline text="Founders Talk" xmlUrl="https://changelog.com/founderstalk/feed"/>
+      <outline text="Software Engineering Daily" xmlUrl="https://softwareengineeringdaily.com/feed/podcast/"/>
+      <outline text="Software Engineering Radio" xmlUrl="https://feeds.megaphone.fm/SE-RADIO"/>
+      <outline text="The Stack Overflow Podcast" xmlUrl="https://stackoverflow.blog/podcast/feed/"/>
+      <outline text="InfoQ Podcast" xmlUrl="https://feeds.megaphone.fm/infoq"/>
+      <outline text="Hanselminutes" xmlUrl="https://hanselminutes.com/feeds/mp3"/>
+      <outline text="Corecursive" xmlUrl="https://corecursive.com/feed.xml"/>
+      <outline text="The Real Python Podcast" xmlUrl="https://realpython.com/podcasts/rpp/feed"/>
+      <outline text="Talk Python To Me" xmlUrl="https://talkpython.fm/episodes/rss"/>
+      <outline text="Python Bytes" xmlUrl="https://pythonbytes.fm/episodes/rss"/>
+      <outline text="The Bike Shed" xmlUrl="https://feeds.simplecast.com/5GfLfW0s"/>
+      <outline text="The Stack Overflow Dev Discussions (Archived Feed)" xmlUrl="https://feeds.simplecast.com/tOjNXec5"/>
+      <outline text="The InfoQ Engineering Culture Podcast" xmlUrl="https://feeds.megaphone.fm/infoqengineeringculture"/>
+      <outline text="The WAN Show" xmlUrl="https://feeds.simplecast.com/wan-show"/>
+    </outline>
+
+    <outline text="Web / Frontend / UX">
+      <outline text="Syntax" xmlUrl="https://feeds.syntax.fm/"/>
+      <outline text="ShopTalk Show" xmlUrl="https://shoptalkshow.com/feed/podcast/"/>
+      <outline text="HTTP 203" xmlUrl="https://feeds.feedburner.com/http203podcast"/>
+      <outline text="Frontend Happy Hour" xmlUrl="https://feeds.soundcloud.com/users/soundcloud:users:265928913/sounds.rss"/>
+      <outline text="Design Details" xmlUrl="https://designdetails.fm/episodes/feed"/>
+      <outline text="The React Podcast" xmlUrl="https://feeds.simplecast.com/JoR28o79"/>
+      <outline text="Modern Web" xmlUrl="https://modernweb.podbean.com/feed.xml"/>
+    </outline>
+
+    <outline text="Apple / Mobile / Swift">
+      <outline text="Accidental Tech Podcast" xmlUrl="https://atp.fm/rss"/>
+      <outline text="Under the Radar" xmlUrl="https://www.relay.fm/radar/feed"/>
+      <outline text="Swift by Sundell" xmlUrl="https://swiftbysundell.com/podcast/rss"/>
+      <outline text="AppStories" xmlUrl="https://appstories.net/episodes/feed/"/>
+      <outline text="The iOS Dev Discussions" xmlUrl="https://feeds.transistor.fm/ios-engineering"/>
+      <outline text="Fragmented (Android)" xmlUrl="https://fragmentedpodcast.com/feed/"/>
+    </outline>
+
+    <outline text="Cloud / DevOps / Infrastructure">
+      <outline text="Kubernetes Podcast" xmlUrl="https://kubernetespodcast.com/atom.xml"/>
+      <outline text="Screaming in the Cloud" xmlUrl="https://feeds.transistor.fm/screaming-in-the-cloud"/>
+      <outline text="On-Call Nightmares" xmlUrl="https://oncallnightmares.libsyn.com/rss"/>
+      <outline text="SRE Weekly (Audio)" xmlUrl="https://sreweekly.com/feed/podcast/"/>
+      <outline text="Google Cloud Platform Podcast" xmlUrl="https://www.gcppodcast.com/feed.xml"/>
+      <outline text="The Official AWS Podcast" xmlUrl="https://d3gih7jbfe3jlq.cloudfront.net/AWSPodcast.xml"/>
+      <outline text="Real World DevOps" xmlUrl="https://realworlddevops.com/feed.xml"/>
+      <outline text="The Kubernetes Podcast (Google)" xmlUrl="https://kubernetespodcast.com/atom.xml"/>
+    </outline>
+
+    <outline text="Security / Privacy">
+      <outline text="Security Now" xmlUrl="https://feeds.twit.tv/sn.xml"/>
+      <outline text="Smashing Security" xmlUrl="https://feeds.fireside.fm/smashingsecurity/rss"/>
+      <outline text="The CyberWire Daily" xmlUrl="https://thecyberwire.com/podcasts/daily-podcast/rss"/>
+      <outline text="CISO Series Podcast" xmlUrl="https://cisoseries.com/feed/podcast/"/>
+      <outline text="Malicious Life" xmlUrl="https://malicious.life/feed/podcast/"/>
+      <outline text="Security Weekly News" xmlUrl="https://securityweekly.com/category/podcasts/feed/"/>
+    </outline>
+
+    <outline text="AI / ML / Data">
+      <outline text="TWIML AI Podcast" xmlUrl="https://twimlai.com/feed/podcast/"/>
+      <outline text="Practical AI" xmlUrl="https://changelog.com/practicalai/feed"/>
+      <outline text="Latent Space" xmlUrl="https://feeds.simplecast.com/oi3aijUM"/>
+      <outline text="Data Skeptic" xmlUrl="https://dataskeptic.com/feed.rss"/>
+      <outline text="The Data Exchange with Ben Lorica" xmlUrl="https://thedataexchange.media/feed/podcast/"/>
+      <outline text="Eye on AI" xmlUrl="https://rss.art19.com/eye-on-ai"/>
+      <outline text="The Gradient Podcast" xmlUrl="https://feeds.simplecast.com/tOjNXec5"/>
+      <outline text="Practical Data Engineering" xmlUrl="https://feeds.redcircle.com/7d6d2a41-0d0c-4d24-9f5e-0bbdd7c67e7c"/>
+      <outline text="The Analytics Engineering Podcast" xmlUrl="https://podcast.getdbt.com/feed.xml"/>
+      <outline text="The Data Engineering Podcast" xmlUrl="https://www.dataengineeringpodcast.com/feed/mp3/"/>
+    </outline>
+
+    <outline text="Product / Design / Startups">
+      <outline text="Lenny's Podcast" xmlUrl="https://api.substack.com/feed/podcast/179593.rss"/>
+      <outline text="Indie Hackers" xmlUrl="https://feeds.transistor.fm/indiehackers"/>
+      <outline text="Startups For the Rest of Us" xmlUrl="https://feeds.simplecast.com/zpqRkL6G"/>
+      <outline text="Product Love" xmlUrl="https://productlove.libsyn.com/rss"/>
+      <outline text="The Product Experience" xmlUrl="https://www.mindtheproduct.com/feed/podcast/"/>
+      <outline text="My First Million" xmlUrl="https://feeds.simplecast.com/NGYV8ZkW"/>
+      <outline text="How I Built This" xmlUrl="https://feeds.npr.org/510313/podcast.xml"/>
+      <outline text="a16z x AI" xmlUrl="https://feeds.simplecast.com/L4aa7d5j"/>
+    </outline>
+
+    <outline text="General Science / Design / Curiosity">
+      <outline text="99% Invisible" xmlUrl="https://feeds.99percentinvisible.org/99percentinvisible"/>
+      <outline text="Radiolab" xmlUrl="https://feeds.wnyc.org/radiolab"/>
+      <outline text="Freakonomics Radio" xmlUrl="https://feeds.simplecast.com/Wgl4Sg7H"/>
+      <outline text="The Ezra Klein Show" xmlUrl="https://rss.art19.com/the-ezra-klein-show"/>
+      <outline text="Not So Standard Deviations" xmlUrl="https://nssdeviations.com/feed.xml"/>
+      <outline text="Hardware Addicts" xmlUrl="https://hardwareaddicts.org/feed/podcast/"/>
+    </outline>
+
+  </body>
+</opml>
