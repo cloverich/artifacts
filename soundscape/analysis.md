@@ -35,7 +35,7 @@ Official Foley documentation and repository declare MIT, with no separate paid s
 
 The user's pasted license clauses are not identified as Foley terms. Do not silently import those restrictions into Foley. For another pack, inspect that pack's actual license, including sample/demo rights, seat/project coverage, web use, and redistribution terms. An audio sprite, base64 embedding, WASM, or a binary blob remains extractable. None automatically grants permission or proves legal synchronization. “Synchronized” is a license term about incorporation into a project, not a technical consequence of obscuring bytes.
 
-Keep one canonical lossless sprite as an intentional binary asset in Git LFS. Ignore the ZIP and raw export folder, preserving the user's local inputs. Keep original map as small provenance metadata, and track newly generated exact map/checksums. The canonical sprite supports rebuilding without the ignored originals. Do not commit reproducible HTML bundles, captures, temporary source downloads, or machine metadata. No publication is requested; work remains local.
+Keep one canonical lossless sprite as an intentional binary asset in Git LFS. Ignore the ZIP and raw export folder, preserving the user's local inputs. Keep original map as small provenance metadata, and track newly generated exact map/checksums. The canonical sprite supports rebuilding without the ignored originals. Do not commit reproducible HTML bundles, captures, temporary source downloads, or machine metadata. The first milestone was local; the later user request explicitly authorizes pushing and deploying the application (see follow-up below).
 
 ## Audio path and tradeoffs
 
@@ -47,7 +47,7 @@ One combined sprite reduces asset/decoder orchestration and permits one local bu
 
 ## What the artifact should expose
 
-Three feedback densities: silent, essential (meaningful result/state), and full (focus, clicks, controls, transitions as well). Separate audition from the policy so all 28 supplied cues can be inspected even in silent UI mode once sound is enabled. Show last cue, waveform, sprite segment, decode time and decoded memory. Distinguish the measured decode duration from device output latency; a successful scheduled Web Audio call is not a listening test. Optional screen-position stereo placement lets the user compare a shared center with modest localization.
+Three feedback densities: silent, essential (selection and meaningful result/state), and full (focus, clicks, controls, transitions as well). Separate audition from the policy so all 28 supplied cues can be inspected even in silent UI mode once sound is enabled. Show last cue, waveform, sprite segment, decode time and decoded memory. Distinguish the measured decode duration from device output latency; a successful scheduled Web Audio call is not a listening test. Optional screen-position stereo placement lets the user compare a shared center with modest localization.
 
 Keep the same operation understandable without audio. Visual state/log/status messages carry every result. Keyboard focus can give the same gentle cue as pointer hover. Do not sound every frame or every telemetry update. Task completion gets a result sound; busy sounds stop before completion. No ambient soundtrack. Reduced motion does not imply a sound preference.
 
@@ -62,7 +62,7 @@ Keep the same operation understandable without audio. Visual state/log/status me
 - https://developer.mozilla.org/en-US/docs/Web/API/AudioBufferSourceNode/start
 - https://github.com/github/gitignore/blob/main/Node.gitignore
 
-## Implementation and verification
+## Implementation and verification — first milestone
 
 Engram note ID: `03h1ehvd7d7nrjuw4pitlwqbs`.
 
@@ -83,3 +83,19 @@ Browser inspection used the bundled HTML via localhost. Confirmed audio unlock/s
 ## Committed implementation
 
 Implementation milestone: [e81458c](/code/artifacts@e81458c1cbec9904380896a92dfff8e07cee4118). Source: [UI](/code/artifacts@e81458c1cbec9904380896a92dfff8e07cee4118/soundscape/app.js), [audio engine](/code/artifacts@e81458c1cbec9904380896a92dfff8e07cee4118/soundscape/audio.js), [build](/code/artifacts@e81458c1cbec9904380896a92dfff8e07cee4118/soundscape/build.mjs), and [README](/code/artifacts@e81458c1cbec9904380896a92dfff8e07cee4118/soundscape/README.md). No push or deployment was performed.
+
+## Follow-up — topography, Rising Contour, and deployment
+
+Requested 12 October 2026: add the reference dashboard's topographic vocabulary, reuse our Rising Contour header, make table clicks audible, default volume to 25%, then commit and push for deployment.
+
+The original `visuals.js` extends the transect profile into a synthetic caldera bowl/rim. Along the amber survey route the field exactly shares profile elevations. Approximately five thousand point samples suggest a scanned surface, and marching squares interpolates contour thresholds on a smaller grid. Canvas 2D projects the points, contour segments, transect and station glyphs with a controllable yaw and zoom. This is a small CPU-rendered illustration, not the reference's WebGL geographic terrain. A consistent local pairing resolves four-edge contour saddles; no claim is made that it is a GIS contour extraction tool. Table selections update the terrain/HUD, profile, sensors and sampling state. Direct marker picking, drag orbit, Ctrl-wheel zoom and keyboard orbit/reset are available.
+
+The header adapts **our own** Rising Contour implementation in [Oxide Header Lab](../oxide-header-lab/app.js), originally inspired by [Oxide's Series D announcement](https://oxide.computer/blog/our-445m-series-d). It preserves the three-frequency curve, half-block edge, sparse `#`, `:` and dot shading, purple character, and decelerating travel. The band uses 144 or 72 columns and 12 rows. No Oxide code/font/media is copied. The header and terrain share one 24 fps loop, pause offscreen/hidden or when Motion is off, and retain a still frame under reduced motion. Existing sound behavior remains independent of the decorative clock.
+
+A distinct `selection` audio category now plays in Essential and Full: changing rows uses `switch`, re-clicking the selected row uses `tap`, and orbit/reset controls use selection cues. Silent and mute still suppress all UI sounds. Default master gain and slider are both 25%. This corrects the first milestone's policy that suppressed selection in Essential.
+
+Deployment wiring: add Soundscape to the collection index, artifact catalog, explicit Pages build/copy list, and CI mechanics checks. The only Soundscape file copied to publication is the generated standalone HTML, including its MIT-attributed audio sprite and notice. LFS content is checked out by the existing workflow. ZIP, raw exports, QA captures, dependencies, and source/repository metadata are excluded. The user explicitly authorized publishing this Foley-backed application; the audio license evidence and provenance remain as recorded above.
+
+Verification: all 16 collection checks passed (the nine Soundscape checks include Essential selection versus Silent/mute suppression). The full curated Pages build passed with 13 files, about 2.50 MiB total; Scanground printed existing browser-database age notices. Browser checks at 1280 px and 390 px confirmed 25% initial volume, audible-event scheduling for changed and repeated table selection, linked terrain/profile/sensors, keyboard orbit/reset, Silent suppression, and frozen ASCII after motion pause. No Soundscape console warnings/errors or clipped narrow-layout elements were observed. No new listening or direct-file playback claim is made. Direct canvas marker picking, pointer drag, zoom, and real background-lifecycle behavior were not exercised end-to-end in this follow-up.
+
+The working tree's unrelated exploded-atlas changes are excluded from this revision. GitHub Actions builds from the committed checkout, not the local ignored publication directory. Push/deployment results are recorded in the Engram study once the workflow completes.

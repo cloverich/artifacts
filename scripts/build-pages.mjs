@@ -11,7 +11,7 @@ const run = (command, args, directory = '.') => {
   if (result.error) throw result.error;
   if (result.status !== 0) throw new Error(`${command} failed in ${directory}`);
 };
-for (const project of ['exploded-atlas', 'motion-accent-lab', 'opentunnel-lab']) {
+for (const project of ['exploded-atlas', 'motion-accent-lab', 'opentunnel-lab', 'soundscape']) {
   run(process.execPath, ['build.mjs'], project);
 }
 run(process.platform === 'win32' ? 'npm.cmd' : 'npm', ['run', 'build'], 'scanground');
@@ -25,6 +25,7 @@ for (const path of [
   'exploded-atlas/dist/exploded-atlas.html',
   'motion-accent-lab/dist/motion-accent.html',
   'opentunnel-lab/dist/tunnel-signal.html',
+  'soundscape/dist/soundscape.html',
   'scanground/dist/index.html',
   'validate_opml/README.md',
 ]) {

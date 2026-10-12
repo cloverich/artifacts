@@ -34,6 +34,7 @@ jobs:
       - name: Check artifact mechanics
         run: |
           node --test exploded-atlas/mechanics.test.mjs motion-accent-lab/mechanics.test.mjs opentunnel-lab/timeline.test.mjs
+          node --test soundscape/*.test.mjs
           node --check oxide-header-lab/app.js
       - name: Build and check publication
         run: node scripts/build-pages.mjs

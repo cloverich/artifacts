@@ -59,6 +59,15 @@
     const dot = document.createElementNS(NS, 'circle'); dot.setAttribute('cx', s.x); dot.setAttribute('cy', yFor(s.altitude));
     dot.setAttribute('r', 2); dot.setAttribute('class', 'station-dot'); $('profile-stations').append(text, dot);
   });
+  const visuals = new SurveyVisuals({ canvas: $('terrain'), field: $('rising-contour'), stations, profileAt,
+    onSelect: index => selectStation(index, $('terrain')), onView: ({ yaw, zoom }) => {
+      const label = `AZ ${Math.round(yaw * 180 / Math.PI)}° / ${zoom.toFixed(1)}×`;
+      if ($('terrain-view').textContent !== label) $('terrain-view').textContent = label;
+    } });
+  for (const [id, amount] of [['orbit-left', -.18], ['orbit-right', .18]]) {
+    $(id).addEventListener('click', () => { visuals.orbit(amount); sound('switch', 'selection', $(id)); });
+  }
+  $('terrain-reset').addEventListener('click', () => { visuals.resetView(); sound('latch', 'selection', $('terrain-reset')); });
   for (const [family, names] of Object.entries(families)) {
     const row = document.createElement('div'); row.className = 'cue-family';
     const label = document.createElement('span'); label.textContent = family; row.append(label);
@@ -78,6 +87,8 @@
   }
   function renderSelection() {
     const s = stations[selected];
+    visuals.setSelected(selected);
+    $('terrain-selection').textContent = `${s.id} / ${s.name}`;
     [...$('stations').children].forEach((row, i) => {
       row.setAttribute('aria-pressed', String(i === selected)); row.lastElementChild.textContent = completed.has(i) ? 'SAMPLED' : task?.station === i ? 'BUSY' : 'READY';
     });
@@ -102,8 +113,9 @@
     updateThreshold(false);
   }
   function selectStation(index, el) {
+    sound(index === selected ? 'tap' : 'switch', 'selection', el);
     if (index === selected) return;
-    selected = index; renderSelection(); sound('switch', 'interaction', el);
+    selected = index; renderSelection();
     log(`Inspection → ${stations[selected].id} / ${stations[selected].name}`);
   }
   function setSampleStatus(message, progress) {
@@ -219,7 +231,7 @@
   document.querySelectorAll('[data-mode]').forEach(button => button.addEventListener('click', () => {
     audio.setMode(button.dataset.mode); document.querySelectorAll('[data-mode]').forEach(b => b.setAttribute('aria-pressed', String(b === button)));
     const explanation = { silent: 'Silent: the instrument UI is quiet. Cue auditions still work while sound is enabled.',
-      essential: 'Essential: state changes and results. Focus, selection, and slider sounds stay quiet.',
+      essential: 'Essential: selections, state changes, and results. Focus and continuous slider sounds stay quiet.',
       full: 'Full: focus, controls, transitions, state changes, and results. Compare the same task at a richer density.' };
     $('policy-explanation').textContent = explanation[audio.mode];
     sound('switch', 'interaction', button);
@@ -229,6 +241,7 @@
   function setMotion(value) {
     motion = value; document.body.dataset.motion = motion ? 'on' : 'off';
     $('motion').setAttribute('aria-pressed', String(motion)); $('motion').querySelector('span').textContent = motion ? 'ON' : 'OFF';
+    visuals.setMotion(motion);
     cancelAnimationFrame(animationFrame); animationFrame = null; drawScope();
   }
   $('motion').addEventListener('click', () => setMotion(!motion));
@@ -291,7 +304,7 @@
       cancelAnimationFrame(animationFrame); animationFrame = null;
     } else drawScope();
   });
-  window.addEventListener('pagehide', () => { cancelTask('Acquisition stopped', false); audio.mute(); clearTimeout(warningTimer); cancelAnimationFrame(animationFrame); });
+  window.addEventListener('pagehide', () => { cancelTask('Acquisition stopped', false); audio.mute(); clearTimeout(warningTimer); cancelAnimationFrame(animationFrame); visuals.setMotion(false); });
   window.addEventListener('resize', () => { cancelAnimationFrame(animationFrame); drawScope(); });
   renderSelection(); updateMission(); updateMetrics(); setMotion(motion); log('CALDERA initialized / awaiting operator');
 })();

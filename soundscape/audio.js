@@ -4,7 +4,7 @@ class SpriteAudio {
     onPlay = () => {}, onChange = () => {} } = {}) {
     this.data = data; this.Context = Context; this.hidden = hidden;
     this.onPlay = onPlay; this.onChange = onChange;
-    this.enabled = false; this.mode = 'essential'; this.volume = 0.22; this.spatial = true;
+    this.enabled = false; this.mode = 'essential'; this.volume = 0.25; this.spatial = true;
     this.voices = new Set(); this.last = new Map(); this.playCount = 0;
   }
   async enable() {
@@ -53,7 +53,7 @@ class SpriteAudio {
     const source = c.createBufferSource(), gain = c.createGain(), panner = c.createStereoPanner();
     source.buffer = this.buffer;
     panner.pan.value = this.spatial ? Math.max(-0.65, Math.min(0.65, pan)) : 0;
-    const level = category === 'focus' ? 0.24 : category === 'interaction' ? 0.52 : 0.8;
+    const level = category === 'focus' ? 0.24 : ['interaction', 'selection'].includes(category) ? 0.52 : 0.8;
     gain.gain.setValueAtTime(0, now);
     gain.gain.linearRampToValueAtTime(level, now + 0.002);
     gain.gain.setValueAtTime(level, now + Math.max(0.002, cue.duration - 0.004));

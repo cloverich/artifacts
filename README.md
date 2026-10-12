@@ -2,7 +2,7 @@
 
 A collection of standalone experiments in interfaces, motion, sound, and diagrams. Each experiment lives in its own directory with a README explaining its intent and how to run it.
 
-Open [index.html](index.html) to browse the collection. The index is plain HTML/CSS and needs no installation. The three bundled studies and Scanground must be built before their links work in a fresh checkout. All browser artifacts, including Scanground, can open directly from disk after building.
+Open [index.html](index.html) to browse the collection. The index is plain HTML/CSS and needs no installation. The four bundled studies and Scanground must be built before their links work in a fresh checkout. All browser artifacts, including Scanground, can open directly from disk after building.
 
 ## Build and preview the collection
 
@@ -17,12 +17,13 @@ node scripts/preview-pages.mjs
 
 Visit <http://127.0.0.1:8765/artifacts/>. The preview deliberately uses a repository subpath and returns real 404s, matching the routing constraints of GitHub Pages. Stop it with Ctrl+C.
 
-The builder emits a curated `_site/` directory, checks local HTML links and assets, reports its size, and fails above the Pages size limit. It preserves the same relative links as the local index. It publishes the six browser artifacts, Oxide's research note, and the OPML utility's README. It copies no dependencies, local photographs, downloaded feeds, credentials, or repository metadata. Generated output stays ignored.
+The builder emits a curated `_site/` directory, checks local HTML links and assets, reports its size, and fails above the Pages size limit. It preserves the same relative links as the local index. It publishes the seven browser artifacts, Oxide's research note, and the OPML utility's README. Soundscape embeds its MIT-attributed Foley audio sprite; its original ZIP and duplicate WAVs are excluded. It copies no dependencies, local photographs, downloaded feeds, credentials, or repository metadata. Generated output stays ignored.
 
 To run the existing mechanics checks:
 
 ```sh
 node --test exploded-atlas/mechanics.test.mjs motion-accent-lab/mechanics.test.mjs opentunnel-lab/timeline.test.mjs
+node --test soundscape/*.test.mjs
 node --check oxide-header-lab/app.js
 ```
 
@@ -48,8 +49,8 @@ Git history was reset to a clean source snapshot on 10 October 2026; the previou
 
 Install [Git LFS](https://git-lfs.com/) before adding binary assets, then run `git lfs install --local` in each fresh clone. The committed `.gitattributes` routes common image, audio, video, document, model, and archive formats through LFS, including uppercase extensions; text and SVG stay in regular Git. Use `git lfs ls-files` to inspect tracked assets. These patterns do not automatically catch every large file: review size before committing and add a specific `git lfs track` rule when needed. LFS stores pointers in Git and content separately; it does not grant publication rights or replace ignore rules.
 
-The Pages workflow checks out LFS content before building the curated `_site/`; never publish pointer files as media. LFS storage and transfer are subject to the GitHub account's quotas. Current intentional assets are text/SVG, so the initial snapshot needs no LFS uploads.
+The Pages workflow checks out LFS content before building the curated `_site/`; never publish pointer files as media. LFS storage and transfer are subject to the GitHub account's quotas. Soundscape's intentional Foley sprite uses LFS; other current assets are text/SVG.
 
-Before committing, review size, privacy, copyright, and provenance. Publish our own media only; identify and link third-party sample media instead of copying it into the hosted site. Record original-asset provenance and third-party code sources/licenses in each project's README or analysis.
+Before committing, review size, privacy, copyright, and provenance. Publish original media and explicitly authorized redistributable assets only; identify and link other third-party sample media instead of copying it into the hosted site. Record original-asset provenance and third-party sources/licenses in each project's README or analysis. Foley's generated exports retain the upstream MIT notice and per-source hashes in Soundscape.
 
 Index entries record a short inspiration note and the date added. Dates marked `~` are inferred; see [the catalog evidence](docs/artifact-catalog.md). Preserve these dates on edits and record exact dates and source links for new entries.

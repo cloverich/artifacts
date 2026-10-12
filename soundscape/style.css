@@ -1011,3 +1011,27 @@ body[data-motion=off] * {
   transition:none!important;
   animation:none!important
 }
+
+/* The header remains ordinary text over a separate decorative ASCII field. */
+.contour-banner { position:relative; height:82px; margin-top:12px; overflow:hidden; border-bottom:1px solid var(--line); container-type:inline-size; }
+#rising-contour { position:absolute; inset:0; margin:0; color:#b084c5; font:1.1574cqw/0.59cqw var(--mono); opacity:.53; white-space:pre; user-select:none; mask-image:linear-gradient(to right,#0003,#000); }
+.contour-caption { position:absolute; bottom:8px; left:0; right:0; display:flex; justify-content:space-between; gap:12px; color:var(--muted); font-size:8px; letter-spacing:.12em; }
+.terrain-stage { position:relative; }
+#terrain { width:100%; height:285px; display:block; touch-action:none; cursor:grab; }
+#terrain:active { cursor:grabbing; }
+.terrain-hud { position:absolute; inset:12px 15px auto; display:flex; justify-content:space-between; gap:12px; pointer-events:none; color:var(--muted); font-size:8px; letter-spacing:.05em; }
+.terrain-hud>span:last-child { color:var(--accent); }
+.terrain-controls { padding:0 14px 10px; display:flex; align-items:center; justify-content:space-between; gap:10px; }
+.terrain-controls>div { display:flex; gap:6px; }
+.terrain-controls button { padding:5px 10px; font-size:10px; }
+.terrain-help { border-top:1px solid var(--line); padding:8px 14px; font-size:8px; }
+/* Keep the command and log compact beside the added terrain instrument. */
+.console>.rail { align-self:start; }
+.command-panel,.log-panel { flex:initial; }
+@media(max-width:700px) {
+  .contour-banner { height:66px; margin-top:8px; }
+  #rising-contour { font-size:2.3148cqw; line-height:1.04cqw; }
+  .contour-caption { font-size:7px; letter-spacing:.04em; }
+  #terrain { height:245px; }
+  .terrain-hud { font-size:7px; }
+}

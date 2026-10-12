@@ -4,8 +4,8 @@ import { Script } from 'node:vm';
 import { readWav } from './wav.mjs';
 const here = new URL('./', import.meta.url);
 const read = name => readFile(new URL(name, here), 'utf8');
-const [template, css, engine, app, map, license, wav] = await Promise.all([
-  read('index.html'), read('style.css'), read('audio.js'), read('app.js'), read('audio/sprite.json'), read('FOLEY-LICENSE.txt'),
+const [template, css, engine, visuals, app, map, license, wav] = await Promise.all([
+  read('index.html'), read('style.css'), read('audio.js'), read('visuals.js'), read('app.js'), read('audio/sprite.json'), read('FOLEY-LICENSE.txt'),
   readFile(new URL('audio/mechanical-8st.wav', here))
 ]);
 const meta = JSON.parse(map), pcm = readWav(wav);
@@ -14,7 +14,7 @@ for (const cue of Object.values(meta.cues)) {
   if (cue.startFrame < 0 || cue.frames <= 0 || cue.startFrame + cue.frames > pcm.frames) throw new Error('Invalid sprite range');
 }
 const payload = `const SOUND_DATA = ${JSON.stringify({ ...meta, base64: wav.toString('base64') })};`;
-const js = `${payload}\n${engine}\n${app}`;
+const js = `${payload}\n${engine}\n${visuals}\n${app}`;
 new Script(js, { filename: 'soundscape.js' });
 const escape = str => str.replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;');
 const html = template.replace('/* STYLES */', css).replace('/* SCRIPTS */', js.replaceAll('</script', '<\\/script')).replace('FOLEY_LICENSE', escape(license));

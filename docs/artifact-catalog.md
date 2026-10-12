@@ -4,6 +4,7 @@ The index records when an experiment entered this collection, not when its exter
 
 | Artifact | Added date shown | Evidence / confidence | Inspiration |
 | --- | --- | --- | --- |
+| Soundscape / CALDERA | 12 October 2026 | First study, user-supplied Foley exports, and implementation commits on this date. | Foley; Diagonale des Fous / MODALE; our Rising Contour experiment from Oxide Header Lab, inspired by Oxide's Series D header. See soundscape/analysis.md for sources and audio provenance. |
 | Exploded Atlas | 10 October 2026 | Study date recorded in analysis | Supplied landscape and pavilion diagrams attributed by the user to Archmaster; attribution and exact product identity unverified. |
 | Motion Accent Lab | 9 October 2026 | Inspection date recorded in analysis | Anime.js, Vesper Drift, and clips from antic and Ryan on X; links in analysis. |
 | Tunnel / Signal Lab | 9 October 2026 | Inspection date recorded in analysis | OpenTunnel's printed fields and sonic network diagram. |

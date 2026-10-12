@@ -30,12 +30,14 @@ test('no pre-unlock playback; enabling again reuses the decode and context', asy
   await audio.enable(); const c = audio.context; audio.mute(); await audio.enable();
   assert.equal(audio.context, c); assert.equal(c.decodeCount, 1);
 });
-test('essential suppresses interaction/focus, silent suppresses results, audition is explicit', async () => {
+test('essential includes selection but suppresses focus; silent and mute suppress selection too', async () => {
   const { audio } = setup(); await audio.enable();
   assert.equal(audio.play('tap'), false); assert.equal(audio.play('hover', { category: 'focus' }), false);
+  assert.equal(audio.play('switch', { category: 'selection' }), true);
   assert.equal(audio.play('complete', { category: 'result' }), true);
   audio.setMode('silent'); assert.equal(audio.voices.size, 0);
   assert.equal(audio.play('complete', { category: 'result' }), false);
+  assert.equal(audio.play('switch', { category: 'selection' }), false);
   assert.equal(audio.play('complete', { audition: true }), true);
   audio.mute(); assert.equal(audio.voices.size, 0); assert.equal(audio.play('tap', { audition: true }), false);
 });
