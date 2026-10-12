@@ -1,0 +1,114 @@
+{
+  "tick": {
+    "start": 0,
+    "duration": 0.1235
+  },
+  "hover": {
+    "start": 0.1735,
+    "duration": 0.1379
+  },
+  "glide": {
+    "start": 0.3614,
+    "duration": 0.1569
+  },
+  "pop": {
+    "start": 0.5683,
+    "duration": 0.1373
+  },
+  "press": {
+    "start": 0.7556,
+    "duration": 0.1346
+  },
+  "release": {
+    "start": 0.9402,
+    "duration": 0.1307
+  },
+  "tap": {
+    "start": 1.1209,
+    "duration": 0.1247
+  },
+  "thock": {
+    "start": 1.2956,
+    "duration": 0.1362
+  },
+  "on": {
+    "start": 1.4818,
+    "duration": 0.2182
+  },
+  "off": {
+    "start": 1.75,
+    "duration": 0.2185
+  },
+  "switch": {
+    "start": 2.0185,
+    "duration": 0.1435
+  },
+  "latch": {
+    "start": 2.212,
+    "duration": 0.1466
+  },
+  "success": {
+    "start": 2.4086,
+    "duration": 0.3726
+  },
+  "error": {
+    "start": 2.8312,
+    "duration": 0.285
+  },
+  "warning": {
+    "start": 3.1662,
+    "duration": 0.3006
+  },
+  "denied": {
+    "start": 3.5168,
+    "duration": 0.1427
+  },
+  "chime": {
+    "start": 3.7094,
+    "duration": 0.4505
+  },
+  "ping": {
+    "start": 4.2099,
+    "duration": 0.2192
+  },
+  "bell": {
+    "start": 4.4791,
+    "duration": 0.4716
+  },
+  "bubble": {
+    "start": 5.0007,
+    "duration": 0.1492
+  },
+  "swoosh": {
+    "start": 5.1999,
+    "duration": 0.2008
+  },
+  "whoosh": {
+    "start": 5.4507,
+    "duration": 0.2009
+  },
+  "drop": {
+    "start": 5.7015,
+    "duration": 0.2748
+  },
+  "rise": {
+    "start": 6.0264,
+    "duration": 0.2542
+  },
+  "loading": {
+    "start": 6.3306,
+    "duration": 0.3693
+  },
+  "ready": {
+    "start": 6.7499,
+    "duration": 0.2298
+  },
+  "complete": {
+    "start": 7.0297,
+    "duration": 0.582
+  },
+  "sparkle": {
+    "start": 7.6617,
+    "duration": 0.3238
+  }
+}

@@ -1,0 +1,8 @@
+# Node baseline: https://github.com/github/gitignore/blob/main/Node.gitignore (CC0)
+dist/
+node_modules/
+qa/
+*.log
+# Original download duplicates the canonical LFS sprite. Preserve locally.
+foley-cues-mechanical/
+foley-cues-mechanical.zip

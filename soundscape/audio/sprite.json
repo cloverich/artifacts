@@ -1,0 +1,178 @@
+{
+  "rate": 44100,
+  "channels": 2,
+  "bits": 16,
+  "gapFrames": 2205,
+  "frames": 352320,
+  "sha256": "312e7024598564f31941b77fcd45edae6dc0da94023991655037e163072fc637",
+  "cues": {
+    "tick": {
+      "start": 0,
+      "duration": 0.12344671201814059,
+      "startFrame": 0,
+      "frames": 5444
+    },
+    "hover": {
+      "start": 0.1734467120181406,
+      "duration": 0.13793650793650794,
+      "startFrame": 7649,
+      "frames": 6083
+    },
+    "glide": {
+      "start": 0.3613832199546485,
+      "duration": 0.1583219954648526,
+      "startFrame": 15937,
+      "frames": 6982
+    },
+    "pop": {
+      "start": 0.5697052154195011,
+      "duration": 0.13727891156462585,
+      "startFrame": 25124,
+      "frames": 6054
+    },
+    "press": {
+      "start": 0.756984126984127,
+      "duration": 0.1346031746031746,
+      "startFrame": 33383,
+      "frames": 5936
+    },
+    "release": {
+      "start": 0.9415873015873016,
+      "duration": 0.130702947845805,
+      "startFrame": 41524,
+      "frames": 5764
+    },
+    "tap": {
+      "start": 1.1222902494331066,
+      "duration": 0.12532879818594103,
+      "startFrame": 49493,
+      "frames": 5527
+    },
+    "thock": {
+      "start": 1.2976190476190477,
+      "duration": 0.1361904761904762,
+      "startFrame": 57225,
+      "frames": 6006
+    },
+    "on": {
+      "start": 1.483809523809524,
+      "duration": 0.2181859410430839,
+      "startFrame": 65436,
+      "frames": 9622
+    },
+    "off": {
+      "start": 1.7519954648526077,
+      "duration": 0.21854875283446712,
+      "startFrame": 77263,
+      "frames": 9638
+    },
+    "switch": {
+      "start": 2.0205442176870747,
+      "duration": 0.14351473922902494,
+      "startFrame": 89106,
+      "frames": 6329
+    },
+    "latch": {
+      "start": 2.2140589569160998,
+      "duration": 0.14662131519274377,
+      "startFrame": 97640,
+      "frames": 6466
+    },
+    "success": {
+      "start": 2.4106802721088436,
+      "duration": 0.37848072562358276,
+      "startFrame": 106311,
+      "frames": 16691
+    },
+    "error": {
+      "start": 2.839160997732426,
+      "duration": 0.28496598639455784,
+      "startFrame": 125207,
+      "frames": 12567
+    },
+    "warning": {
+      "start": 3.174126984126984,
+      "duration": 0.3005895691609977,
+      "startFrame": 139979,
+      "frames": 13256
+    },
+    "denied": {
+      "start": 3.524716553287982,
+      "duration": 0.14263038548752835,
+      "startFrame": 155440,
+      "frames": 6290
+    },
+    "chime": {
+      "start": 3.7173469387755103,
+      "duration": 0.39034013605442175,
+      "startFrame": 163935,
+      "frames": 17214
+    },
+    "ping": {
+      "start": 4.157687074829932,
+      "duration": 0.21836734693877552,
+      "startFrame": 183354,
+      "frames": 9630
+    },
+    "bell": {
+      "start": 4.426054421768708,
+      "duration": 0.47548752834467123,
+      "startFrame": 195189,
+      "frames": 20969
+    },
+    "bubble": {
+      "start": 4.951541950113379,
+      "duration": 0.15068027210884355,
+      "startFrame": 218363,
+      "frames": 6645
+    },
+    "swoosh": {
+      "start": 5.152222222222222,
+      "duration": 0.21040816326530612,
+      "startFrame": 227213,
+      "frames": 9279
+    },
+    "whoosh": {
+      "start": 5.412630385487528,
+      "duration": 0.19675736961451248,
+      "startFrame": 238697,
+      "frames": 8677
+    },
+    "drop": {
+      "start": 5.659387755102041,
+      "duration": 0.2760544217687075,
+      "startFrame": 249579,
+      "frames": 12174
+    },
+    "rise": {
+      "start": 5.985442176870748,
+      "duration": 0.25369614512471655,
+      "startFrame": 263958,
+      "frames": 11188
+    },
+    "loading": {
+      "start": 6.289138321995464,
+      "duration": 0.36925170068027213,
+      "startFrame": 277351,
+      "frames": 16284
+    },
+    "ready": {
+      "start": 6.708390022675737,
+      "duration": 0.22981859410430838,
+      "startFrame": 295840,
+      "frames": 10135
+    },
+    "complete": {
+      "start": 6.988208616780045,
+      "duration": 0.5768480725623583,
+      "startFrame": 308180,
+      "frames": 25439
+    },
+    "sparkle": {
+      "start": 7.615056689342404,
+      "duration": 0.32405895691609976,
+      "startFrame": 335824,
+      "frames": 14291
+    }
+  }
+}

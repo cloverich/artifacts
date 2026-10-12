@@ -1,0 +1,176 @@
+{
+  "source": "User-supplied Foley exports, 12 October 2026",
+  "theme": "mechanical",
+  "transpose": -8,
+  "upstreamSnapshot": "bd31fd931b849fdc6c14c01ed2b78d0020a33720",
+  "files": {
+    "tick": {
+      "filename": "foley-mechanical-tick-8st.wav",
+      "sha256": "505e5621707a10a998ee07f6b8c0e472fa66b7aeac193ce0eeb6c4d862969f8e",
+      "suppliedDuration": 0.1235,
+      "actualDuration": 0.12344671201814059
+    },
+    "hover": {
+      "filename": "foley-mechanical-hover-8st.wav",
+      "sha256": "63c1a7b79212f6afc748ec56556541de8a097c262227b7e3b7cbee9e019e932c",
+      "suppliedDuration": 0.1379,
+      "actualDuration": 0.13793650793650794
+    },
+    "glide": {
+      "filename": "foley-mechanical-glide-8st.wav",
+      "sha256": "aa5d16a4bd0db534eccae84d71c7f30f937eaf161ef1bc8f7277fd6db730a209",
+      "suppliedDuration": 0.1569,
+      "actualDuration": 0.1583219954648526
+    },
+    "pop": {
+      "filename": "foley-mechanical-pop-8st.wav",
+      "sha256": "aa1bb89eff3a53cf01b75b314e32e079ff816ed72b205d95ffc6783295fe497e",
+      "suppliedDuration": 0.1373,
+      "actualDuration": 0.13727891156462585
+    },
+    "press": {
+      "filename": "foley-mechanical-press-8st.wav",
+      "sha256": "0639a1393237661bdb4357f53152cd6361153cc8880ffced3694174a1466eb45",
+      "suppliedDuration": 0.1346,
+      "actualDuration": 0.1346031746031746
+    },
+    "release": {
+      "filename": "foley-mechanical-release-8st.wav",
+      "sha256": "9a2dbeeb0950442d254c853c5fffed8fc59e0b6ae0237e83f11e4dfa6c72b714",
+      "suppliedDuration": 0.1307,
+      "actualDuration": 0.130702947845805
+    },
+    "tap": {
+      "filename": "foley-mechanical-tap-8st.wav",
+      "sha256": "ea382511e2a2f56908f80f4539201d7040acec19913535e02d3571d0d672f2dd",
+      "suppliedDuration": 0.1247,
+      "actualDuration": 0.12532879818594103
+    },
+    "thock": {
+      "filename": "foley-mechanical-thock-8st.wav",
+      "sha256": "399ab64f4d0f685cae0efc7fcff894da2366eecc03532a2309ccc835c0199054",
+      "suppliedDuration": 0.1362,
+      "actualDuration": 0.1361904761904762
+    },
+    "on": {
+      "filename": "foley-mechanical-on-8st.wav",
+      "sha256": "904db5560c40cf8d63141b5fbfe9b7d743c315ad282c3c371dc942111f5ea45e",
+      "suppliedDuration": 0.2182,
+      "actualDuration": 0.2181859410430839
+    },
+    "off": {
+      "filename": "foley-mechanical-off-8st.wav",
+      "sha256": "27dbdee1df2529350b51f4792d86e1ae4b92f26bb6a14f353156e28ea1d155f3",
+      "suppliedDuration": 0.2185,
+      "actualDuration": 0.21854875283446712
+    },
+    "switch": {
+      "filename": "foley-mechanical-switch-8st.wav",
+      "sha256": "56ecb650cc3e88a87df91731e06961ec6750a80e69731624e6f644d746390e3c",
+      "suppliedDuration": 0.1435,
+      "actualDuration": 0.14351473922902494
+    },
+    "latch": {
+      "filename": "foley-mechanical-latch-8st.wav",
+      "sha256": "19d4c22cc5c8695f1add439731a45cf7a98ad10c7e059eb6799d19747559eec0",
+      "suppliedDuration": 0.1466,
+      "actualDuration": 0.14662131519274377
+    },
+    "success": {
+      "filename": "foley-mechanical-success-8st.wav",
+      "sha256": "34516fd206daad0979c875db6fde2ffffa71d879b28d035814a5c02445596a9f",
+      "suppliedDuration": 0.3726,
+      "actualDuration": 0.37848072562358276
+    },
+    "error": {
+      "filename": "foley-mechanical-error-8st.wav",
+      "sha256": "1e37bd5842f57dff9bad9940b10b9cce5c0c338450a4ef14c8cadb1f26780c8f",
+      "suppliedDuration": 0.285,
+      "actualDuration": 0.28496598639455784
+    },
+    "warning": {
+      "filename": "foley-mechanical-warning-8st.wav",
+      "sha256": "552daf525f3aa089ab8c88f3f8f8e09f5849d16f3322a24afec3c8cda6d36840",
+      "suppliedDuration": 0.3006,
+      "actualDuration": 0.3005895691609977
+    },
+    "denied": {
+      "filename": "foley-mechanical-denied-8st.wav",
+      "sha256": "a86134b9c6c1d5534326ecf5ea3b4a3d0c3dd365a4f5f3423568d14b27c0a60d",
+      "suppliedDuration": 0.1427,
+      "actualDuration": 0.14263038548752835
+    },
+    "chime": {
+      "filename": "foley-mechanical-chime-8st.wav",
+      "sha256": "b0c1c70d64033b59f4b06c36b251091bdab39f1e4e55a35187a61328e5ec038d",
+      "suppliedDuration": 0.4505,
+      "actualDuration": 0.39034013605442175
+    },
+    "ping": {
+      "filename": "foley-mechanical-ping-8st.wav",
+      "sha256": "3f22f293a39dd6ca92e9671a4ae1e564df13117a3e881c85d39e530f16023e08",
+      "suppliedDuration": 0.2192,
+      "actualDuration": 0.21836734693877552
+    },
+    "bell": {
+      "filename": "foley-mechanical-bell-8st.wav",
+      "sha256": "ad1274e5850b0a6aa1da2b4d64f9f9b40df25a92e276872dac96a91ebca13856",
+      "suppliedDuration": 0.4716,
+      "actualDuration": 0.47548752834467123
+    },
+    "bubble": {
+      "filename": "foley-mechanical-bubble-8st.wav",
+      "sha256": "be251952a188495499c7957b282ebd5a3f9bb06a95dbe20b973374fb05732100",
+      "suppliedDuration": 0.1492,
+      "actualDuration": 0.15068027210884355
+    },
+    "swoosh": {
+      "filename": "foley-mechanical-swoosh-8st.wav",
+      "sha256": "35b83c15570686ad3416dd4d9e80dd7cfa338a9ccc4a401f3725dac8c2a4c1cd",
+      "suppliedDuration": 0.2008,
+      "actualDuration": 0.21040816326530612
+    },
+    "whoosh": {
+      "filename": "foley-mechanical-whoosh-8st.wav",
+      "sha256": "3b3f8dd38f2178d801b173d9987521b4b6e0bdfc739fa6e21417f8fe8104b0f5",
+      "suppliedDuration": 0.2009,
+      "actualDuration": 0.19675736961451248
+    },
+    "drop": {
+      "filename": "foley-mechanical-drop-8st.wav",
+      "sha256": "7aa10f6681ba2a31dabb80fdfc3ccc291ed895a14f130963dea48f106ffad7a9",
+      "suppliedDuration": 0.2748,
+      "actualDuration": 0.2760544217687075
+    },
+    "rise": {
+      "filename": "foley-mechanical-rise-8st.wav",
+      "sha256": "975cb864e483fc215091fcec82df136465aff614f90b99073489e0cfd5da45ce",
+      "suppliedDuration": 0.2542,
+      "actualDuration": 0.25369614512471655
+    },
+    "loading": {
+      "filename": "foley-mechanical-loading-8st.wav",
+      "sha256": "ae9ed40f5b8b494bec4e7479a4c11d5ceebe1cd151a247d87bfb9a10e4cee3ac",
+      "suppliedDuration": 0.3693,
+      "actualDuration": 0.36925170068027213
+    },
+    "ready": {
+      "filename": "foley-mechanical-ready-8st.wav",
+      "sha256": "746d30a423d782e5586956e5b1dfa6bfbda036c43788576c8d5c3b10593d0df8",
+      "suppliedDuration": 0.2298,
+      "actualDuration": 0.22981859410430838
+    },
+    "complete": {
+      "filename": "foley-mechanical-complete-8st.wav",
+      "sha256": "9184c16c800b89aba305b658c0ad77596396b22d8fefd25dea342a1fbc269a8f",
+      "suppliedDuration": 0.582,
+      "actualDuration": 0.5768480725623583
+    },
+    "sparkle": {
+      "filename": "foley-mechanical-sparkle-8st.wav",
+      "sha256": "8105780dfbca5430b2f21a13c8cceb74adbed1b27579b9344e1fe9f7296e3968",
+      "suppliedDuration": 0.3238,
+      "actualDuration": 0.32405895691609976
+    }
+  }
+}
