@@ -2,6 +2,8 @@
 
 A local experiment in sonic UI feedback, built around a simulated volcanic survey console. Instruments link station selection, elevation, sensor thresholds, sample acquisition, relay state, command validation, and an event log. Compare **Silent / Essential / Full** feedback density, audition all 28 supplied cues, and inspect their waveform and sprite timing. Sound requires explicit enable; every outcome also has visual feedback.
 
+Implementation milestone: `e81458c1cbec9904380896a92dfff8e07cee4118` (local commit). Engram study: `03h1ehvd7d7nrjuw4pitlwqbs`; commit-pinned code links are preserved in that note and `analysis.md`.
+
 ## Run
 
 Requires Node 20+ for tooling, no package installation or runtime dependencies.

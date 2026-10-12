@@ -79,3 +79,7 @@ Browser inspection used the bundled HTML via localhost. Confirmed audio unlock/s
 **Limits:** direct file:// verification was blocked by browser URL policy. Local HTTP testing does not establish direct-file playback. No listening test, audible latency benchmark, other browser/mobile-device verification, or real OS background-lifecycle test was performed. Hidden gating is unit-tested. A single browser decode took 21.3 ms, producing a 2.93 MiB float buffer; device/browser dependent.
 
 **Preservation review:** original generated UI/code; no copied dashboard assets/code/fonts/data, secrets, cookies, network telemetry, or private media. Foley's full MIT notice is retained. Canonical WAV is an intentional binary asset covered by repository LFS rules; local hooks/config initialized and pointer tracking checked. ZIP, duplicate individual WAVs, dist builds, screenshots and OS metadata stay ignored. User inputs remain on disk. Only this study is committed; unrelated exploded-atlas edits are untouched. No push/deployment is performed.
+
+## Committed implementation
+
+Implementation milestone: [e81458c](/code/artifacts@e81458c1cbec9904380896a92dfff8e07cee4118). Source: [UI](/code/artifacts@e81458c1cbec9904380896a92dfff8e07cee4118/soundscape/app.js), [audio engine](/code/artifacts@e81458c1cbec9904380896a92dfff8e07cee4118/soundscape/audio.js), [build](/code/artifacts@e81458c1cbec9904380896a92dfff8e07cee4118/soundscape/build.mjs), and [README](/code/artifacts@e81458c1cbec9904380896a92dfff8e07cee4118/soundscape/README.md). No push or deployment was performed.
