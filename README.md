@@ -2,7 +2,7 @@
 
 A collection of standalone experiments in interfaces, motion, sound, and diagrams. Each experiment lives in its own directory with a README explaining its intent and how to run it.
 
-Open [index.html](index.html) to browse the collection. The index is plain HTML/CSS and needs no installation. The four bundled studies and Scanground must be built before their links work in a fresh checkout. All browser artifacts, including Scanground, can open directly from disk after building.
+Open [index.html](index.html) to browse the collection. The index is plain HTML/CSS and needs no installation. The five bundled studies and Scanground must be built before their links work in a fresh checkout. All browser artifacts, including Scanground, can open directly from disk after building.
 
 ## Build and preview the collection
 
@@ -17,7 +17,7 @@ node scripts/preview-pages.mjs
 
 Visit <http://127.0.0.1:8765/artifacts/>. The preview deliberately uses a repository subpath and returns real 404s, matching the routing constraints of GitHub Pages. Stop it with Ctrl+C.
 
-The builder emits a curated `_site/` directory, checks local HTML links and assets, reports its size, and fails above the Pages size limit. It preserves the same relative links as the local index. It publishes the seven browser artifacts, Oxide's research note, and the OPML utility's README. Soundscape embeds its MIT-attributed Foley audio sprite; its original ZIP and duplicate WAVs are excluded. It copies no dependencies, local photographs, downloaded feeds, credentials, or repository metadata. Generated output stays ignored.
+The builder emits a curated `_site/` directory, checks local HTML links and assets, reports its size, and fails above the Pages size limit. It preserves the same relative links as the local index. It publishes the eight browser artifacts, Oxide's research note, and the OPML utility's README. Soundscape embeds its MIT-attributed Foley audio sprite; its original ZIP and duplicate WAVs are excluded. It copies no dependencies, local photographs, downloaded feeds, credentials, or repository metadata. Generated output stays ignored.
 
 To run the existing mechanics checks:
 

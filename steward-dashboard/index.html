@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Steward — a fictional engineering routine and its shared working memory. A standalone dashboard prototype.">
+  <meta name="theme-color" content="#0c0f0d">
+  <title>Steward / Engineering operations</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cpath fill='%23c6ee9f' d='M4 4h24v5H9v5h19v14H4v-5h19v-5H4z'/%3E%3C/svg%3E">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <a class="skip" href="#current-state">Skip to current state</a>
+  <div class="shell">
+    <header class="masthead">
+      <div class="brand"><svg class="brand-mark" viewBox="0 0 32 32" aria-hidden="true"><path d="M4 4h24v5H9v5h19v14H4v-5h19v-5H4z"/></svg><h1>STEWARD<span class="version"> / 01</span></h1><span class="brand-divider"></span><span class="repo">atlas / core</span></div>
+      <div class="last-update"><span class="status-dot"></span><span>Updated <time datetime="2026-10-15T09:42:00-07:00">15 Oct 2026 · 09:42 PDT</time></span></div>
+    </header>
+
+    <main>
+      <section class="overview" aria-labelledby="overview-title">
+        <div class="section-top"><h2 id="overview-title"><span class="section-number">01</span>Routine overview</h2><div class="eyebrow"><span class="bracket">[</span> DAILY AT 09:00 PDT <span class="bracket">]</span></div></div>
+        <div class="metrics">
+          <article class="metric"><div class="metric-label">Runs completed<span class="tiny-icon">↗</span></div><div class="metric-value"><span id="runs-7">—</span><span class="period">7d</span></div><div class="metric-foot"><span><b id="runs-30">—</b> in 30 days</span><span class="metric-note">3 agents</span></div></article>
+          <article class="metric"><div class="metric-label">Outstanding PRs<span class="tiny-icon">⑂</span></div><div class="metric-value">6<span class="period">open</span></div><div class="metric-foot"><span><b>2</b> need your review</span><span class="metric-note">4 in CI</span></div></article>
+          <article class="metric"><div class="metric-label">Commits landed<span class="tiny-icon">◇</span></div><div class="metric-value"><span id="commits-7">—</span><span class="period">7d</span></div><div class="metric-foot"><span><b id="commits-30">—</b> in 30 days</span><span class="metric-note">main</span></div></article>
+          <article class="metric"><div class="metric-label">Vulnerabilities fixed<span class="tiny-icon">⌁</span></div><div class="metric-value accent"><span id="fixes-7">—</span><span class="period">7d</span></div><div class="metric-foot"><span><b id="fixes-30">—</b> in 30 days</span><span class="metric-note accent">0 critical open</span></div></article>
+        </div>
+
+        <div class="charts">
+          <article class="chart-panel activity-panel" aria-labelledby="activity-title">
+            <div class="chart-heading"><h3 id="activity-title">Activity footprint</h3><span class="eyebrow">LAST 180 DAYS</span></div>
+            <div class="chart-deck"><strong id="activity-total">— runs</strong><span>A little work, every day.</span></div>
+            <div id="heatmap" class="heatmap" role="img" aria-label="Daily completed runs over the last 180 days. Activity increases on weekdays."></div>
+            <div class="chart-bottom"><span id="heatmap-readout" aria-live="polite">19 Apr — 15 Oct 2026</span><div class="heat-legend" aria-hidden="true"><span>Less</span><i class="level-0"></i><i class="level-1"></i><i class="level-2"></i><i class="level-3"></i><i class="level-4"></i><span>More</span></div></div>
+          </article>
+          <article class="chart-panel burndown-panel" aria-labelledby="burndown-title">
+            <div class="chart-heading"><h3 id="burndown-title">Vulnerability burndown</h3><span class="eyebrow">LAST 90 DAYS</span></div>
+            <div class="chart-deck"><strong><span class="accent">6</span> remaining</strong><span class="reduction">↘ 92% from baseline</span></div>
+            <div id="burndown" class="burndown"></div>
+            <div class="chart-bottom"><span><i class="legend-line"></i> Open vulnerabilities</span><span class="target-label">TARGET <b>0</b></span></div>
+          </article>
+        </div>
+      </section>
+
+      <section id="current-state" class="current-state" aria-labelledby="state-title">
+        <div class="section-top"><h2 id="state-title"><span class="section-number">02</span>Where things stand</h2><div class="eyebrow">3 ACTIVE AGENTS <span class="separator">/</span> SHARED WORKING MEMORY</div></div>
+        <div class="state-list">
+          <details class="state-record" id="dependency-state">
+            <summary><span class="agent-glyph" aria-hidden="true">▦</span><span class="state-name">Dependency tracker<span class="state-preview">Patch updates clear. Two minor bumps in CI.</span></span><span class="state-status"><span class="status-dot"></span>On track</span><time class="row-time" datetime="2026-10-15T09:18:00-07:00">09:18 PDT</time><span class="chevron" aria-hidden="true">+</span></summary>
+            <div class="state-body"><div class="handoff"><div class="eyebrow">CURRENT CONTEXT</div><p>All eligible patch updates are merged. Two minor upgrades are isolated in separate PRs: the background-job client and the frontend build tools. Both pass unit tests; the browser suite is still running. Major version upgrades remain outside the daily routine.</p><p><span class="next-label">NEXT RUN →</span> Check CI on <a href="#pr-482" data-ref="pr-482">PR #482</a> and <a href="#pr-483" data-ref="pr-483">PR #483</a>. Merge only after the required checks pass. Keep the job-client update separate from the Rails migration so regressions have a clear owner.</p></div><aside class="work-links"><div class="eyebrow">RELATED WORK</div><a href="#pr-482" data-ref="pr-482"><span class="link-kind">PR</span>#482 · Job-client minor bump <span>↗</span></a><a href="#pr-483" data-ref="pr-483"><span class="link-kind">PR</span>#483 · Build-tool updates <span>↗</span></a><a href="#commit-7c91e0a" data-ref="commit-7c91e0a"><span class="link-kind">GIT</span>7c91e0a · Merge patch batch <span>↗</span></a><div class="handoff-meta">4 packages updated · 2 open PRs</div></aside></div>
+          </details>
+          <details class="state-record" id="vulnerability-state">
+            <summary><span class="agent-glyph" aria-hidden="true">⛨</span><span class="state-name">Vulnerability tracker<span class="state-preview">Six findings remain. No critical exposure.</span></span><span class="state-status"><span class="status-dot"></span>6 remaining</span><time class="row-time" datetime="2026-10-15T09:31:00-07:00">09:31 PDT</time><span class="chevron" aria-hidden="true">+</span></summary>
+            <div class="state-body"><div class="handoff"><div class="eyebrow">CURRENT CONTEXT</div><p>The latest scan has six open findings: two high and four moderate. A fix for one high finding is ready for review in <a href="#pr-484" data-ref="pr-484">PR #484</a>. The other depends on an upstream release, tracked in <a href="#sec-218" data-ref="sec-218">SEC-218</a>. Affected paths have a temporary mitigation; none of the findings is critical.</p><p><span class="next-label">NEXT RUN →</span> Recheck the upstream patch, rerun the advisory scan after #484 lands, then address the four moderate findings. Do not dismiss findings just because a dependency is transitive. Preserve the mitigation until the patched artifact is deployed.</p></div><aside class="work-links"><div class="eyebrow">RELATED WORK</div><a href="#pr-484" data-ref="pr-484"><span class="link-kind">PR</span>#484 · Harden archive extraction <span>↗</span></a><a href="#pr-485" data-ref="pr-485"><span class="link-kind">PR</span>#485 · Transitive parser patch <span>↗</span></a><a href="#sec-218" data-ref="sec-218"><span class="link-kind">JIRA</span>SEC-218 · Upstream patch <span>↗</span></a><div class="handoff-meta">0 critical · 2 high · 4 moderate</div></aside></div>
+          </details>
+          <details class="state-record" id="rails-state">
+            <summary><span class="agent-glyph" aria-hidden="true">⇄</span><span class="state-name">Rails 7 migration<span class="state-preview">18 of 24 components migrated. Session policy needs a decision.</span></span><span class="state-status attention"><span class="status-dot"></span>Needs review</span><time class="row-time" datetime="2026-10-15T09:42:00-07:00">09:42 PDT</time><span class="chevron" aria-hidden="true">+</span></summary>
+            <div class="state-body"><div class="handoff"><div class="eyebrow">CURRENT CONTEXT</div><p>18 of 24 components now pass against Rails 7. The dual-version CI matrix is green for models, background jobs, and mailers. The migration branch includes compatibility fixes for the new autoloader; <a href="#pr-479" data-ref="pr-479">PR #479</a> is ready for review. Two request/session specs are isolated in <a href="#pr-486" data-ref="pr-486">PR #486</a>.</p><p><span class="next-label">NEXT RUN →</span> Continue migrating the remaining API controllers. Hold the session-default change until a maintainer chooses the rollout policy in <a href="#eng-342" data-ref="eng-342">ENG-342</a>; it affects existing signed-in users. Keep the old cookie reader during the transition.</p></div><aside class="work-links"><div class="eyebrow">RELATED WORK</div><a href="#pr-479" data-ref="pr-479"><span class="link-kind">PR</span>#479 · Autoloader compatibility <span>↗</span></a><a href="#pr-486" data-ref="pr-486"><span class="link-kind">PR</span>#486 · Request/session specs <span>↗</span></a><a href="#eng-342" data-ref="eng-342"><span class="link-kind">JIRA</span>ENG-342 · Session rollout policy <span>↗</span></a><div class="migration-progress"><span>18 / 24 components</span><meter min="0" max="24" value="18" aria-label="Rails migration: 18 of 24 components complete">75%</meter></div></aside></div>
+          </details>
+        </div>
+      </section>
+
+      <section class="run-log" aria-labelledby="log-title">
+        <div class="section-top"><h2 id="log-title"><span class="section-number">03</span>What happened</h2><div class="log-tools"><label class="sr-only" for="agent-filter">Filter run log by agent</label><select id="agent-filter"><option value="all">All agents</option><option value="dependency">Dependency tracker</option><option value="vulnerability">Vulnerability tracker</option><option value="rails">Rails 7 migration</option></select><span class="eyebrow" id="run-count" aria-live="polite">15 RUNS</span></div></div>
+        <div class="log-table-head" aria-hidden="true"><span>AGENT / OUTCOME</span><span>STARTED · PDT</span><span>DURATION</span><span>REFERENCE</span><span></span></div>
+        <div id="run-records"></div>
+        <div class="log-end"><span class="end-mark">└─</span> End of run history <span class="muted">/ 11–15 Oct 2026</span><span class="log-order">NEWEST FIRST ↓</span></div>
+      </section>
+    </main>
+    <footer><span><span class="footer-mark">✳</span> A routine with a memory.</span><span>FICTIONAL WORKSPACE <span class="separator">/</span> INTERACTIVE PROTOTYPE</span></footer>
+  </div>
+
+  <dialog id="work-dialog" aria-labelledby="work-title"><form method="dialog"><button class="dialog-close" aria-label="Close work preview">×</button></form><div class="eyebrow">FICTIONAL WORK ITEM</div><h2 id="work-title"></h2><div id="work-status" class="dialog-status"></div><p id="work-description"></p><p class="dialog-note">Sample data for this prototype. In a connected workspace, this link would open the pull request, commit, or ticket.</p><form method="dialog"><button class="dialog-done">Back to dashboard <span>↵</span></button></form></dialog>
+  <noscript><p class="noscript">Enable JavaScript for the charts and sample run history. The current-state summaries above can still be expanded.</p></noscript>
+  <script src="app.js" defer></script>
+</body>
+</html>

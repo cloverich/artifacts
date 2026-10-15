@@ -1,0 +1,6 @@
+# Node baseline reviewed against github/gitignore/Node.gitignore (CC0).
+# The root already covers dependencies, builds, caches, logs, and secrets.
+dist/
+qa/
+.node_repl_history
+report.[0-9]*.[0-9]*.[0-9]*.[0-9]*.json
