@@ -64,3 +64,5 @@ All mock workspace data and the pixel S mark are original. No workplace examples
 
 
 Engram note: `03h1zwtiovhw4repexouvwg44`.
+
+Implementation commit: `f95c5e099036f2c95cd5c10e4b7f49347d739547`. The Engram study links the source at this revision.

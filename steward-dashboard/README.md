@@ -32,6 +32,8 @@ Visual inspiration: [Prime Intellect](https://www.primeintellect.ai/) and [Plast
 
 [Design study and verification](analysis.md). Engram note: `03h1zwtiovhw4repexouvwg44`.
 
+Committed implementation: `f95c5e099036f2c95cd5c10e4b7f49347d739547` (local Git commit).
+
 ## Verification
 
 Verified the bundled HTML over localhost in a browser at desktop width and at 390/320 px: collapsed defaults, three expandable state sections, all fifteen expandable run entries, a five-run agent filter, fictional-link dialog, and no horizontal overflow in the checked layouts. Inspected desktop and expanded mobile screenshots. Node syntax and standalone bundle checks also passed. The whole collection build validates its local links and assets.
