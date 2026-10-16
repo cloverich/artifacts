@@ -118,3 +118,7 @@ test-results/
 
 # Curated GitHub Pages publication (built by scripts/build-pages.mjs)
 /_site/
+# Readable local notes and raw companions (generated from tracked analyses)
+/notes/
+# Retired experiment: preserve ignored local inputs without publishing them.
+/scanground/

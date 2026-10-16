@@ -24,17 +24,15 @@ jobs:
         with:
           node-version: 22
           cache: npm
-          cache-dependency-path: |
-            motion-accent-lab/package-lock.json
-            scanground/package-lock.json
+          cache-dependency-path: motion-accent-lab/package-lock.json
       - name: Install locked dependencies
         run: |
           npm ci --ignore-scripts --prefix motion-accent-lab
-          npm ci --ignore-scripts --prefix scanground
       - name: Check artifact mechanics
         run: |
           node --test exploded-atlas/mechanics.test.mjs motion-accent-lab/mechanics.test.mjs opentunnel-lab/timeline.test.mjs
           node --test soundscape/*.test.mjs
+          node --test scripts/markdown.test.mjs clip_path/mechanics.test.mjs
           node --check oxide-header-lab/app.js
       - name: Build and check publication
         run: node scripts/build-pages.mjs

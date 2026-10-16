@@ -3,6 +3,7 @@ import { cp, mkdir, readFile, readdir, rm, stat, writeFile } from 'node:fs/promi
 import { resolve, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { spawnSync } from 'node:child_process';
+import { buildNotes, studies } from './build-notes.mjs';
 
 const root = fileURLToPath(new URL('../', import.meta.url));
 const output = resolve(root, '_site');
@@ -14,7 +15,7 @@ const run = (command, args, directory = '.') => {
 for (const project of ['exploded-atlas', 'motion-accent-lab', 'opentunnel-lab', 'soundscape', 'steward-dashboard']) {
   run(process.execPath, ['build.mjs'], project);
 }
-run(process.platform === 'win32' ? 'npm.cmd' : 'npm', ['run', 'build'], 'scanground');
+await buildNotes(root);
 await rm(output, { recursive: true, force: true });
 await mkdir(output, { recursive: true });
 for (const path of [
@@ -27,8 +28,9 @@ for (const path of [
   'opentunnel-lab/dist/tunnel-signal.html',
   'soundscape/dist/soundscape.html',
   'steward-dashboard/dist/steward.html',
-  'scanground/dist/index.html',
+  'signal-press/index.html', 'signal-press/specimen.svg',
   'validate_opml/README.md',
+  ...studies.flatMap(study => [`notes/${study.slug}.html`, `notes/${study.slug}.md`]),
 ]) {
   const destination = resolve(output, path);
   await mkdir(dirname(destination), { recursive: true });

@@ -84,3 +84,7 @@ Only source, Markdown notes and a small Node test are added; no build artifacts,
 `node --test clip_path/mechanics.test.mjs` passes five focused tests executing the inline production script with a controlled DOM/timer model: eight-entry startup, restart during purge, repeated assimilation after purge, reduced-motion startup, and purge/halt/automatic restart. These checks target the cancellation races introduced by the original independent timers; they do not establish browser rendering or audible quality.
 
 Visual and interactive browser verification is recorded in the collection's final change report. No listening test or device performance benchmark is claimed here. The original source had a minimal README and no recorded exact Strange Machine source URL, so that historical uncertainty remains explicit.
+
+## Integrated browser verification
+
+On October 16, 2026, the HTTP preview verified the original eight logs, crosshair, assimilation glitch state, purge interruption and Restart, and opt-in sound controls. Desktop, 320 × 568, and 844 × 390 viewports keep the actions anchored while the log scrolls inside the fixed panel. At 320 × 568 the panel measures 418px, log viewport 308px, and completed log content approximately 608px. Containing the original eye inside the clipped decoration layer removed a 100px horizontal overflow. Browser listening quality and direct `file://` execution were not verified; production-script checks cover reduced motion and transition cancellation.
