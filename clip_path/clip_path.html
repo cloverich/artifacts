@@ -38,6 +38,8 @@
             color: var(--hex-main);
             font-family: var(--font-ui);
             height: 100vh;
+            height: 100dvh;
+            min-height: 300px;
             width: 100vw;
             overflow: hidden;
             display: flex;
@@ -67,14 +69,14 @@
         }
 
         .crt-flicker {
-            animation: flicker 0.15s infinite;
+            animation: flicker 8s infinite;
             opacity: 1;
         }
 
         @keyframes flicker {
-            0% { opacity: 0.97; }
+            0% { opacity: 0.99; }
             50% { opacity: 1; }
-            100% { opacity: 0.98; }
+            100% { opacity: 0.99; }
         }
 
         .ascii-art {
@@ -86,7 +88,7 @@
             font-size: 10px;
             line-height: 10px;
             white-space: pre;
-            color: var(--hex-dim);
+            color: #8a5500;
             z-index: 0;
             pointer-events: none;
             user-select: none;
@@ -139,7 +141,10 @@
             position: relative;
             z-index: 10;
             width: 90%;
-            max-width: 600px;
+            max-width: 660px;
+            height: min(650px, calc(100vh - 104px));
+            height: min(650px, calc(100dvh - 104px));
+            min-height: 0;
             /* Filter drop-shadow allows the shadow to follow the clip-path shape! */
             filter: drop-shadow(0 0 15px rgba(255, 157, 0, 0.15)); 
         }
@@ -169,7 +174,13 @@
         }
 
         .modal-content {
-            padding: 2rem 1.5rem;
+            padding: 1.5rem;
+            min-height: 0;
+            flex: 1;
+            overflow-y: auto;
+            overscroll-behavior: contain;
+            scrollbar-width: thin;
+            scrollbar-color: var(--hex-main) var(--hex-bg);
             font-family: var(--font-log);
             font-size: 1.2rem;
             line-height: 1.4;
@@ -183,7 +194,7 @@
         }
 
         .log-prefix {
-            color: var(--hex-dim);
+            color: #ac7833;
             margin-right: 1rem;
             min-width: 80px;
         }
@@ -206,7 +217,8 @@
         /* --- BUTTONS --- */
 
         .modal-actions {
-            padding: 1.5rem;
+            padding: 1rem 1.5rem;
+            flex-shrink: 0;
             display: flex;
             gap: 1rem;
             justify-content: flex-end;
@@ -216,7 +228,10 @@
         /* Button specifics: smaller clip */
         .btn-wrapper {
             --corner-clip: 10px; 
-            cursor: pointer;
+            border: 0;
+            color: inherit;
+            font-family: inherit;
+            cursor: crosshair;
             height: 40px;
             min-width: 120px;
             position: relative;
@@ -252,7 +267,7 @@
         */
 
         .btn-secondary {
-            opacity: 0.6;
+            opacity: 0.8;
         }
         .btn-secondary:hover {
             opacity: 1;
@@ -315,14 +330,106 @@
                 width: 95%;
             }
         }
+
+        /* Quiet ornaments are fixed text layers: no canvas, network images or frame loop. */
+        .ascii-field {
+            position: fixed; inset: 0; overflow: hidden; pointer-events: none;
+            user-select: none; z-index: 0; color: #bb750e;
+        }
+        .ascii-fragment {
+            position: absolute; font: 10px/1.15 monospace; white-space: pre;
+            opacity: .22; animation: field-breathe 16s ease-in-out infinite;
+            -webkit-mask-image: linear-gradient(transparent, #000 24%, #000 76%, transparent);
+            mask-image: linear-gradient(transparent, #000 24%, #000 76%, transparent);
+        }
+        .ascii-fragment:nth-child(1) { left: 3vw; top: 8vh; }
+        .ascii-fragment:nth-child(2) { right: 3vw; bottom: 5vh; animation-delay: -7s; }
+        @keyframes field-breathe { 0%, 100% { opacity: .12; } 50% { opacity: .38; } }
+        .screen-meta, .screen-tools {
+            position: fixed; z-index: 12; left: 5%; right: 5%; display: flex;
+            justify-content: space-between; align-items: center; gap: .75rem;
+            font-size: 11px; line-height: 1.5; letter-spacing: .08em;
+        }
+        .screen-meta { top: 15px; color: #ac7833; }
+        .screen-tools { bottom: 14px; flex-wrap: wrap; }
+        .screen-links, .tool-group { display: flex; gap: 1rem; align-items: center; }
+        a { color: inherit; text-underline-offset: 3px; }
+        .tool {
+            border: 1px solid #68440e; background: var(--hex-bg); color: var(--hex-main);
+            padding: 5px 8px; font: inherit; letter-spacing: inherit;
+        }
+        .tool:hover, .tool[aria-pressed="true"] { border-color: var(--hex-main); }
+        .tool:disabled { opacity: .6; }
+        .btn-wrapper:focus-visible, .tool:focus-visible, a:focus-visible, .modal-content:focus-visible {
+            outline: 2px dashed var(--hex-main); outline-offset: 4px;
+        }
+        .btn-wrapper:focus-visible { filter: drop-shadow(0 0 5px var(--hex-main)); }
+        .modal-header { flex-shrink: 0; }
+        .log-text { min-width: 0; overflow-wrap: anywhere; }
+        .log-entry:last-child { margin-bottom: 0; }
+        .modal-content:focus-visible { outline-offset: -7px; }
+        body.motion-paused { animation: none !important; }
+        .motion-paused *, .motion-paused *::before, .motion-paused *::after {
+            animation: none !important; transition: none !important;
+        }
+        .motion-paused .log-entry { opacity: 1; }
+        .motion-paused .glitch-text::before, .motion-paused .glitch-text::after { display: none; }
+        .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+        @media (prefers-reduced-motion: reduce) {
+            *, *::before, *::after { animation: none !important; transition: none !important; }
+            .log-entry { opacity: 1; }
+            .glitch-text::before, .glitch-text::after { display: none; }
+        }
+        @media (max-width: 480px) {
+            .modal-container { width: 94%; height: calc(100vh - 150px); height: calc(100dvh - 150px); }
+            .modal-header { padding: .8rem; font-size: .7rem; letter-spacing: 1px; }
+            .modal-content { padding: 1rem .8rem; font-size: 1.15rem; }
+            .log-prefix { min-width: 58px; margin-right: .5rem; }
+            .modal-actions { padding: .8rem; gap: .7rem; }
+            .btn-wrapper { min-width: 0; flex: 1; }
+            .screen-meta, .screen-tools { left: 3%; right: 3%; }
+            .screen-meta > span { display: none; }
+            .screen-tools { bottom: 10px; gap: .5rem; }
+            .screen-links, .tool-group { gap: .6rem; }
+            .ascii-fragment { opacity: .15; }
+        }
+        @media (max-height: 480px) and (min-width: 481px) {
+            .modal-header { padding: .5rem 1rem; }
+            .modal-actions { padding: .5rem 1rem; }
+            .modal-content { padding: .8rem 1rem; }
+        }
     </style>
 </head>
 <body class="crt-flicker">
 
-    <div class="noise-overlay"></div>
+    <div class="noise-overlay" aria-hidden="true"></div>
+    <div class="screen-meta"><span>ARCHIVE // TERMINAL STUDY</span><span>LOCAL SESSION · NO TRANSMISSION</span></div>
+    <div class="ascii-field" aria-hidden="true">
+        <pre class="ascii-fragment">                     .  :  .
+                .  : : : : :  .
+           . : : : + + + + : : : .
+        . : : + + / / | \ \ + + : : .
+      . : + / / / /  |  \ \ \ \ + : .
+     : + / / /      [ ]      \ \ \ + :
+    . : + / / /      |      \ \ \ + : .
+      . : + / / / /  |  \ \ \ \ + : .
+        . : : + + \ \ | / / + + : : .
+           . : : : + + + + : : : .
+                .  : : : : :  .
+                     .  :  .</pre>
+        <pre class="ascii-fragment">+--- MEMORY SECTOR / 09 ----------------+
+| . . : : : : : : : : : : : : : : . . |
+| : : : / / / / / / / / / / / / : : : |
+| : : / / +----------------+ / / : : |
+| : / / / |  01 10 01 10  | / / / : |
+| : : / / +----------------+ / / : : |
+| : : : / / / / / / / / / / / / : : : |
+| . . : : : : : : : : : : : : : : . . |
++--------------------------------------+</pre>
+    </div>
 
     <!-- Background ASCII Art (Single Subject: The Eye) -->
-    <div class="ascii-art">
+    <div class="ascii-art" aria-hidden="true">
              ..,:;
           '.,;::::;,.
         .;:;,,,,,,,;:;.
@@ -354,7 +461,7 @@
     </div>
 
     <!-- Main Modal -->
-    <div class="clipped-wrapper modal-container">
+    <main class="clipped-wrapper modal-container" aria-label="Archive terminal">
         <div class="clipped-inner">
             
             <div class="modal-header">
@@ -362,28 +469,37 @@
                 <div>ID: 0xFA4B</div>
             </div>
 
-            <div class="modal-content" id="log-container">
+            <div class="modal-content" id="log-container" tabindex="0" role="region" aria-label="Scrollable audit log">
                 <!-- Content injected by JS for effect -->
             </div>
 
             <div class="modal-actions">
                 <!-- Deny Button -->
-                <div class="clipped-wrapper btn-wrapper btn-secondary" onclick="handleAction('deny')">
-                    <div class="clipped-inner btn-inner">
+                <button type="button" class="clipped-wrapper btn-wrapper btn-secondary" id="purge">
+                    <span class="clipped-inner btn-inner">
                         PURGE
-                    </div>
-                </div>
+                    </span>
+                </button>
                 
                 <!-- Approve Button -->
-                <div class="clipped-wrapper btn-wrapper" onclick="handleAction('approve')">
-                    <div class="clipped-inner btn-inner">
+                <button type="button" class="clipped-wrapper btn-wrapper" id="assimilate">
+                    <span class="clipped-inner btn-inner">
                         ASSIMILATE
-                    </div>
-                </div>
+                    </span>
+                </button>
             </div>
 
         </div>
-    </div>
+    </main>
+    <nav class="screen-tools" aria-label="Terminal controls and links">
+        <div class="screen-links"><a href="../index.html">Collection</a><a href="../notes/clip-path.html">Style notes</a></div>
+        <div class="tool-group">
+            <button type="button" class="tool" id="reset">RESTART</button>
+            <button type="button" class="tool" id="motion" aria-pressed="false">MOTION ON</button>
+            <button type="button" class="tool" id="sound" aria-pressed="false">SOUND OFF</button>
+        </div>
+    </nav>
+    <p id="terminal-status" class="sr-only" role="status" aria-live="polite"></p>
 
     <script>
         // Log Data simulating the corruption of the genre
@@ -399,82 +515,141 @@
         ];
 
         const container = document.getElementById('log-container');
+        const status = document.getElementById('terminal-status');
+        const motionButton = document.getElementById('motion');
+        const soundButton = document.getElementById('sound');
+        const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)');
         let index = 0;
-        let typeTimeout;
+        let motion = !reducedMotion.matches;
+        let timers = new Set();
+        let audioContext;
+        let soundEnabled = false;
+        let audioGeneration = 0;
+        const voices = new Set();
 
-        function renderLog() {
-            if (index < logs.length) {
-                const entry = logs[index];
-                const div = document.createElement('div');
-                div.className = 'log-entry';
-                div.style.animationDelay = `${index * 0.1}s`; // Stagger effect
-                
-                div.innerHTML = `
-                    <div class="log-prefix">[${entry.id}]</div>
-                    <div class="log-text">${entry.text}</div>
-                `;
-                
-                container.appendChild(div);
-                index++;
-                
-                // Random typing variance
-                typeTimeout = setTimeout(renderLog, Math.random() * 300 + 100);
-            }
+        function later(fn, delay) {
+            const timer = setTimeout(() => { timers.delete(timer); fn(); }, delay);
+            timers.add(timer);
         }
-
-        // Start rendering after a brief delay
-        typeTimeout = setTimeout(renderLog, 500);
-
+        function clearWork() {
+            for (const timer of timers) clearTimeout(timer);
+            timers.clear();
+            document.body.style.backgroundColor = '';
+            stopSounds();
+        }
+        function stopSounds() {
+            for (const voice of voices) voice.stop();
+            voices.clear();
+        }
+        // Soundscape's short-envelope feedback vocabulary, synthesized here without samples.
+        function cue(kind) {
+            if (!soundEnabled || document.hidden || audioContext?.state !== 'running') return;
+            stopSounds();
+            const now = audioContext.currentTime;
+            const tones = kind === 'complete' ? [440, 660] : kind === 'purge' ? [110, 73] : [220];
+            tones.forEach((frequency, i) => {
+                const oscillator = audioContext.createOscillator();
+                const gain = audioContext.createGain();
+                const start = now + i * .065;
+                const duration = kind === 'complete' ? .16 : .085;
+                oscillator.type = kind === 'complete' ? 'sine' : 'triangle';
+                oscillator.frequency.setValueAtTime(frequency, start);
+                oscillator.frequency.exponentialRampToValueAtTime(frequency * .75, start + duration);
+                gain.gain.setValueAtTime(0, start);
+                gain.gain.linearRampToValueAtTime(.045, start + .005);
+                gain.gain.exponentialRampToValueAtTime(.0001, start + duration);
+                oscillator.connect(gain); gain.connect(audioContext.destination);
+                let stopped = false;
+                const voice = { stop() { if (!stopped) { stopped = true; oscillator.stop(); } } };
+                oscillator.onended = () => { voices.delete(voice); oscillator.disconnect(); gain.disconnect(); };
+                voices.add(voice); oscillator.start(start); oscillator.stop(start + duration + .01);
+            });
+        }
+        function appendLog(entry) {
+            const nearBottom = container.scrollHeight - container.scrollTop - container.clientHeight < 45;
+            const div = document.createElement('div');
+            div.className = 'log-entry';
+            div.innerHTML = `<div class="log-prefix">[${entry.id}]</div><div class="log-text">${entry.text}</div>`;
+            container.appendChild(div);
+            if (nearBottom) container.scrollTop = container.scrollHeight;
+        }
+        function renderLog() {
+            if (!motion) {
+                while (index < logs.length) appendLog(logs[index++]);
+            } else if (index < logs.length) {
+                appendLog(logs[index++]);
+                if (index < logs.length) later(renderLog, Math.random() * 300 + 100);
+            }
+            if (index === logs.length) status.textContent = 'Audit ready. Accept commodified reality?';
+        }
         function resetSystem() {
-            const content = document.querySelector('.modal-content');
-            content.innerHTML = '';
-            index = 0;
+            clearWork();
+            container.replaceChildren(); container.scrollTop = 0; index = 0;
+            status.textContent = 'Audit restarted.';
             renderLog();
         }
-
         function handleAction(action) {
-            clearTimeout(typeTimeout); // Stop typing if interrupted
-            const header = document.querySelector('.modal-header');
-            const content = document.querySelector('.modal-content');
-            
+            clearWork();
+            container.replaceChildren(); container.scrollTop = 0;
             if (action === 'approve') {
-                // Flash animation
-                document.body.style.backgroundColor = 'var(--hex-main)';
-                setTimeout(() => {
-                    document.body.style.backgroundColor = 'var(--hex-bg)';
-                    content.innerHTML = `
-                        <div class="log-entry" style="margin-top: 2rem; color: var(--hex-main)">
-                            <div class="glitch-text" data-text="ASSIMILATION COMPLETE">ASSIMILATION COMPLETE</div>
-                        </div>
-                        <div class="log-entry">
-                            Please consume next product.
-                        </div>
-                    `;
-                }, 100);
+                cue('complete');
+                if (motion) {
+                    document.body.style.backgroundColor = 'var(--hex-main)';
+                    later(() => { document.body.style.backgroundColor = ''; }, 100);
+                }
+                container.innerHTML = `<div class="log-entry" style="margin-top: 2rem"><div class="glitch-text" data-text="ASSIMILATION COMPLETE">ASSIMILATION COMPLETE</div></div><div class="log-entry">Please consume next product.</div>`;
+                status.textContent = 'Assimilation complete. Please consume next product.';
             } else {
-                // Deny/Purge animation
-                content.innerHTML = '';
+                cue('purge');
                 let count = 0;
-                const purgeInterval = setInterval(() => {
-                    count++;
+                function purgeLine() {
                     const div = document.createElement('div');
                     div.className = 'log-entry';
-                    div.style.color = '#ff0000'; // Hardcoded error red for contrast? No, keep mono.
-                    // Actually, let's keep it amber but chaotic.
-                    div.innerText = `SYS_KILL // PID ${Math.floor(Math.random() * 9999)}`;
-                    content.appendChild(div);
-                    content.scrollTop = content.scrollHeight;
-                    
-                    if (count > 10) {
-                        clearInterval(purgeInterval);
-                        content.innerHTML += `<br><div class="glitch-text" data-text="SYSTEM HALTED">SYSTEM HALTED</div>`;
-                        
-                        // Reset after 5s
-                        setTimeout(resetSystem, 5000);
+                    div.textContent = `SYS_KILL // PID ${Math.floor(Math.random() * 9999)}`;
+                    container.appendChild(div);
+                    container.scrollTop = container.scrollHeight;
+                    if (++count < 11) later(purgeLine, motion ? 100 : 0);
+                    else {
+                        const halted = document.createElement('div');
+                        halted.className = 'glitch-text'; halted.dataset.text = 'SYSTEM HALTED'; halted.textContent = 'SYSTEM HALTED';
+                        container.appendChild(halted); container.scrollTop = container.scrollHeight;
+                        status.textContent = 'System halted. Audit restarts in five seconds.';
+                        later(resetSystem, 5000);
                     }
-                }, 100);
+                }
+                purgeLine();
             }
         }
+        function applyMotion() {
+            document.body.classList.toggle('motion-paused', !motion);
+            motionButton.textContent = motion ? 'MOTION ON' : 'MOTION OFF';
+            motionButton.setAttribute('aria-pressed', String(motion));
+            motionButton.disabled = reducedMotion.matches;
+        }
+        document.getElementById('purge').addEventListener('click', () => handleAction('deny'));
+        document.getElementById('assimilate').addEventListener('click', () => handleAction('approve'));
+        document.getElementById('reset').addEventListener('click', () => { resetSystem(); cue('tap'); });
+        motionButton.addEventListener('click', () => { motion = !motion; applyMotion(); });
+        reducedMotion.addEventListener('change', () => { motion = !reducedMotion.matches; applyMotion(); });
+        soundButton.addEventListener('click', async () => {
+            const generation = ++audioGeneration;
+            if (soundEnabled) {
+                soundEnabled = false; stopSounds(); soundButton.textContent = 'SOUND OFF'; soundButton.setAttribute('aria-pressed', 'false'); return;
+            }
+            const Context = window.AudioContext || window.webkitAudioContext;
+            if (!Context) { soundButton.textContent = 'NO AUDIO'; soundButton.disabled = true; return; }
+            try {
+                audioContext ||= new Context({ latencyHint: 'interactive' });
+                await audioContext.resume();
+                if (generation !== audioGeneration || document.hidden) return;
+                soundEnabled = true; soundButton.textContent = 'SOUND ON'; soundButton.setAttribute('aria-pressed', 'true'); cue('tap');
+            } catch { soundEnabled = false; soundButton.textContent = 'RETRY AUDIO'; }
+        });
+        document.addEventListener('visibilitychange', () => { if (document.hidden) { ++audioGeneration; stopSounds(); } });
+        window.addEventListener('pagehide', () => { ++audioGeneration; clearWork(); audioContext?.suspend(); });
+        window.addEventListener('pageshow', event => { if (event.persisted) resetSystem(); });
+        applyMotion();
+        if (motion) later(renderLog, 500); else renderLog();
     </script>
 </body>
 </html>
