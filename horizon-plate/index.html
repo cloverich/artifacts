@@ -1,0 +1,145 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Horizon Plate</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<meta name="description" content="A footer lab: turn a landscape into an engraved, dithered, or typed plate that dissolves into the page.">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header class="bar">
+  <span class="mark">Horizon Plate <i>/ footer lab</i></span>
+  <span class="bar-meta">Mask PNG · CSS ink · no runtime JS on the shipped page</span>
+</header>
+
+<main class="lab">
+  <section class="stage" aria-label="Preview">
+    <div class="site" id="site">
+      <article class="site-article">
+        <p class="kicker">Field notes · No. 014</p>
+        <h2>Where the page ends, the land begins</h2>
+        <p>The last paragraph of a long read should not hit a wall. Here the page keeps going: the footer has no background of its own, and the plate below is only ink. Its sky is the page.</p>
+        <p>Scroll the stage. Nothing here repaints. The plate is one small PNG used as a mask, and the colour is CSS.</p>
+      </article>
+      <footer class="site-footer" id="siteFooter">
+        <div class="plate" id="plate" aria-hidden="true"></div>
+        <canvas class="inspect" id="inspect" aria-hidden="true" hidden></canvas>
+        <div class="foot-grid">
+          <div class="foot-brand">
+            <p class="foot-name">Pinecoder</p>
+            <p class="foot-blurb">Notes on software, systems, and the occasional long walk.</p>
+          </div>
+          <nav class="foot-cols" aria-label="Example footer links">
+            <div><p class="foot-h">Writing</p><a href="#site">Essays</a><a href="#site">Notes</a><a href="#site">Archive</a></div>
+            <div><p class="foot-h">Work</p><a href="#site">Projects</a><a href="#site">Design system</a><a href="#site">Artifacts</a></div>
+            <div><p class="foot-h">Elsewhere</p><a href="#site">GitHub</a><a href="#site">RSS</a><a href="#site">Email</a></div>
+          </nav>
+        </div>
+        <p class="foot-legal"><span>© 2026 Pinecoder</span><span>Set in ink, rendered once.</span></p>
+      </footer>
+    </div>
+    <div class="readout" id="readout" aria-live="polite">Rendering…</div>
+  </section>
+
+  <aside class="panel" aria-label="Controls">
+    <fieldset>
+      <legend>Source</legend>
+      <div class="seg" id="scenes"></div>
+      <label class="drop" id="drop" for="file">
+        <input id="file" type="file" accept="image/*">
+        <span id="dropText"><b>Drop, paste, or choose an image.</b> It stays in this browser.</span>
+      </label>
+      <label class="row" for="anchor"><span>Crop anchor</span><output id="anchorOut"></output></label>
+      <input id="anchor" type="range" min="0" max="1" step="0.01">
+    </fieldset>
+
+    <fieldset>
+      <legend>Theme</legend>
+      <select id="theme" aria-label="Theme preset"></select>
+      <div class="swatches">
+        <label for="bg">Page <input id="bg" type="color"></label>
+        <label for="ink">Ink <input id="ink" type="color"></label>
+      </div>
+    </fieldset>
+
+    <fieldset>
+      <legend>Algorithm</legend>
+      <div class="seg seg-wrap" id="algos"></div>
+      <p class="hint" id="algoNote"></p>
+      <label class="row" for="size"><span id="sizeLabel">Size</span><output id="sizeOut"></output></label>
+      <input id="size" type="range">
+      <div class="sub" data-for="engrave">
+        <div class="seg" id="fields"></div>
+        <label class="check" for="hatch"><input id="hatch" type="checkbox"> Cross-hatch deep tones</label>
+      </div>
+      <div class="sub" data-for="halftone">
+        <label class="row" for="angle"><span>Screen angle</span><output id="angleOut"></output></label>
+        <input id="angle" type="range" min="0" max="90" step="1">
+      </div>
+      <div class="sub" data-for="diffuse"><div class="seg" id="kernels"></div></div>
+    </fieldset>
+
+    <fieldset>
+      <legend>Tone</legend>
+      <div class="seg" id="polarity"></div>
+      <label class="row" for="lift"><span>Clean sky (ink floor)</span><output id="liftOut"></output></label>
+      <input id="lift" type="range" min="0" max="0.6" step="0.01">
+      <label class="row" for="fade"><span>Dissolve top</span><output id="fadeOut"></output></label>
+      <input id="fade" type="range" min="0" max="0.7" step="0.01">
+      <label class="row" for="contrast"><span>Contrast</span><output id="contrastOut"></output></label>
+      <input id="contrast" type="range" min="0.5" max="2" step="0.05">
+      <label class="row" for="gamma"><span>Gamma</span><output id="gammaOut"></output></label>
+      <input id="gamma" type="range" min="0.5" max="2.5" step="0.05">
+    </fieldset>
+
+    <fieldset>
+      <legend>Plate</legend>
+      <label class="row" for="plateH"><span>Height</span><output id="plateHOut"></output></label>
+      <input id="plateH" type="range" min="200" max="620" step="10">
+      <label class="row" for="overlap"><span>Text over sky</span><output id="overlapOut"></output></label>
+      <input id="overlap" type="range" min="0" max="0.7" step="0.01">
+      <div class="seg" id="views"></div>
+    </fieldset>
+
+    <fieldset>
+      <legend>Ship</legend>
+      <div class="row-2">
+        <label for="bits">Levels <select id="bits"><option value="auto">Auto</option><option value="1">2 · 1-bit</option><option value="2">4 · 2-bit</option><option value="4">16 · 4-bit</option><option value="8">256 · 8-bit</option></select></label>
+        <label for="exportW">Width <select id="exportW"><option value="1600">1600 px</option><option value="2400" selected>2400 px</option><option value="3200">3200 px</option></select></label>
+      </div>
+      <div class="actions">
+        <button id="download" type="button">Export PNG</button>
+        <button id="copy" type="button">Copy CSS</button>
+      </div>
+      <p class="hint" id="exportNote"></p>
+      <pre class="snippet" id="snippet" tabindex="0"></pre>
+    </fieldset>
+  </aside>
+</main>
+
+<section class="notes" aria-labelledby="howTitle">
+  <h2 id="howTitle">How the plate is made</h2>
+  <ol class="pipeline">
+    <li><b>Luminance.</b> The source is drawn to the plate's exact device-pixel size, cropped with the anchor, and reduced to Rec. 709 luminance.</li>
+    <li><b>Tone.</b> Auto-levels on the 0.5 / 99.5 percentiles, contrast, then polarity: which end of the range takes ink. The ink floor drops faint ink to zero, so the sky meets the page colour exactly. The dissolve multiplies ink by a ramp, so dots and lines thin out instead of fading in opacity.</li>
+    <li><b>Mark-making.</b> Line fields and screens run at full resolution with one pixel of analytic antialiasing. Dithers run on their own dot grid, one cell per dot.</li>
+    <li><b>Quantize and encode.</b> Coverage becomes 2 to 256 levels in an indexed PNG. Every palette entry is the ink colour, and transparency carries the coverage, so the file works as a CSS mask and as a plain image.</li>
+    <li><b>Ink with CSS.</b> The page paints <code>background: var(--ink)</code> through <code>mask-image</code>. Changing the theme recolours the plate without re-rendering it. Dithers are scaled up with <code>image-rendering: pixelated</code>, so a 1-bit file at a quarter of the pixels stays sharp.</li>
+  </ol>
+  <div class="rules">
+    <h3>Rules that keep it fast</h3>
+    <ul>
+      <li>Render once, offline or in this lab. The shipped page runs no script for the plate.</li>
+      <li>Never use <code>background-attachment: fixed</code> or a live filter on the plate. Both repaint on scroll.</li>
+      <li>Ship dithers at their dot grid and let the GPU scale them. Ship lines at 2× and let them scale smoothly.</li>
+      <li>Keep dither dots at a fixed CSS size: crop the plate on narrow screens rather than resizing it, or the grain beats against the pixel grid.</li>
+      <li>Lazy work is free: a footer is below the fold, so <code>content-visibility: auto</code> keeps it out of first paint.</li>
+    </ul>
+  </div>
+  <details class="full-study"><summary>Full study: references, algorithms, alternatives, costs</summary><!-- RESEARCH --></details>
+</section>
+<script src="app.js"></script>
+</body>
+</html>

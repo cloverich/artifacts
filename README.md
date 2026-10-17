@@ -2,7 +2,7 @@
 
 A personal library of site styles, interfaces, motion, sound, and diagrams. Each experiment is usually a one-shot LLM study of a reference: break down its styling, then make an original example, often shaped by my prompts. The paired notes preserve the vocabulary, mechanics, evidence, and reusable recipes as the originals change or disappear. Each experiment lives in its own directory with a README explaining its intent and how to run it.
 
-Open [index.html](index.html) to browse the collection. The index is plain HTML/CSS and needs no installation. Build the five bundled studies and readable styling notes before following their links in a fresh checkout. Browser artifacts and rendered notes are self-contained after building. The index links inspirations directly and identifies these independent studies as unaffiliated.
+Open [index.html](index.html) to browse the collection. The index is plain HTML/CSS and needs no installation. Build the six bundled studies and readable styling notes before following their links in a fresh checkout. Browser artifacts and rendered notes are self-contained after building. The index links inspirations directly and identifies these independent studies as unaffiliated.
 
 ## Build and preview the collection
 
@@ -25,7 +25,7 @@ To run the existing mechanics checks:
 ```sh
 node --test exploded-atlas/mechanics.test.mjs motion-accent-lab/mechanics.test.mjs opentunnel-lab/timeline.test.mjs
 node --test soundscape/*.test.mjs
-node --test scripts/markdown.test.mjs clip_path/mechanics.test.mjs
+node --test scripts/markdown.test.mjs clip_path/mechanics.test.mjs horizon-plate/mechanics.test.mjs
 node --check oxide-header-lab/app.js
 ```
 
