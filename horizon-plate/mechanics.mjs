@@ -1,149 +1,18 @@
 // Horizon Plate mechanics: pure functions, no DOM. The page imports nothing;
-// build.mjs strips `export` and inlines this file ahead of app.js.
+// build.mjs strips `export` and inlines this file ahead of app.js. Runs
+// unchanged in Node, given luminance from any image decoder.
 //
 // Pipeline: luminance (Float32 0..1) → tone (ink amount 0..1) → algorithm
 // (Uint8 coverage 0..255) → quantize → indexed PNG. Ink colour never enters
 // the pipeline; CSS applies it, so one mask serves every theme of a polarity.
 
-// ── Noise ────────────────────────────────────────────────────────────────
 const hash2 = (x, y, s) => {
   let h = (x * 374761393 + y * 668265263 + s * 2147483647) | 0;
   h = Math.imul(h ^ (h >>> 13), 1274126177);
   return ((h ^ (h >>> 16)) >>> 0) / 4294967296;
 };
 const smooth = (t) => t * t * (3 - 2 * t);
-export function valueNoise(x, y, s = 0) {
-  const xi = Math.floor(x), yi = Math.floor(y);
-  const xf = smooth(x - xi), yf = smooth(y - yi);
-  const a = hash2(xi, yi, s), b = hash2(xi + 1, yi, s);
-  const c = hash2(xi, yi + 1, s), d = hash2(xi + 1, yi + 1, s);
-  return a + (b - a) * xf + (c - a) * yf + (a - b - c + d) * xf * yf;
-}
-export function fbm(x, y, s = 0, octaves = 4) {
-  let v = 0, amp = 0.5, f = 1;
-  for (let o = 0; o < octaves; o++, amp *= 0.5, f *= 2.03) v += amp * valueNoise(x * f, y * f, s + o * 17);
-  return v;
-}
-
-// ── Procedural scenes (original stand-ins for photographs) ───────────────
-// Each returns luminance at (w, h). Ridges are 1D height functions of x; a
-// pixel takes the nearest ridge whose height it is below, so the scene is a
-// stack of silhouettes with atmospheric perspective (far = closer to sky).
-const mix = (a, b, t) => a + (b - a) * t;
 const clamp01 = (v) => (v < 0 ? 0 : v > 1 ? 1 : v);
-
-export const SCENES = {
-  dunes: {
-    label: "Dunes, moonrise",
-    horizon: 0.62,
-    stars: 0.5,
-    sky: (u, v) => mix(0.16, 0.34, (v / 0.62) ** 1.5),
-    disc: { x: 0.37, y: 0.28, r: 0.03, lum: 0.96, crescent: 0.4 },
-    ridges: [
-      { base: 0.63, amp: 0.03, freq: 3, seed: 3, lum: 0.5, shade: 0.12, falloff: 30, darken: 0.4, grain: 0.04 },
-      { base: 0.71, amp: 0.05, freq: 2.2, seed: 7, lum: 0.64, shade: 0.24, falloff: 14, darken: 0.5, grain: 0.06, streaks: 0.1 },
-      { base: 0.84, amp: 0.07, freq: 1.4, seed: 11, lum: 0.78, shade: 0.3, falloff: 7, darken: 0.6, grain: 0.08, streaks: 0.14 },
-    ],
-  },
-  hills: {
-    label: "Hills, lone tree",
-    horizon: 0.55,
-    sky: (u, v) => mix(0.8, 0.93, v / 0.55) - 0.06 * fbm(u * 3, v * 7, 91, 4),
-    ridges: [
-      { base: 0.57, amp: 0.05, freq: 2.2, seed: 5, lum: 0.74, shade: 0.04, falloff: 20, darken: 0.3, grain: 0.02 },
-      { base: 0.67, amp: 0.06, freq: 1.6, seed: 9, lum: 0.55, shade: 0.08, falloff: 12, darken: 0.6, grain: 0.05, streaks: 0.06 },
-      { base: 0.8, amp: 0.05, freq: 1.1, seed: 13, lum: 0.34, shade: 0.1, falloff: 8, darken: 0.6, grain: 0.12, tree: 0.64 },
-    ],
-  },
-  range: {
-    label: "Range, low sun",
-    horizon: 0.62,
-    sky: (u, v) => mix(0.92, 0.74, v / 0.62) + 0.1 * Math.exp(-(((u - 0.7) ** 2 + (v - 0.52) ** 2) * 30)),
-    disc: { x: 0.7, y: 0.52, r: 0.026, lum: 1, crescent: 0 },
-    ridges: [
-      { base: 0.64, amp: 0.09, freq: 4.5, seed: 21, lum: 0.62, shade: 0.25, falloff: 30, darken: 0.4, grain: 0.03, streaks: 0.3, peaks: true },
-      { base: 0.77, amp: 0.045, freq: 3, seed: 25, lum: 0.42, shade: 0.14, falloff: 30, darken: 0.5, grain: 0.05, streaks: 0.16, peaks: true },
-      { base: 0.89, amp: 0.035, freq: 1.4, seed: 29, lum: 0.22, shade: 0.06, falloff: 10, darken: 0.4, grain: 0.1 },
-    ],
-  },
-};
-
-function ridgeHeight(r, u) {
-  const n = fbm(u * r.freq, r.seed * 0.37, r.seed, r.peaks ? 7 : 5);
-  const shape = r.peaks ? Math.pow(1 - Math.abs(2 * n - 1), 1.6) : n; // ridged noise for mountains
-  return r.base - r.amp * (shape * 2 - 0.5);
-}
-
-export function renderScene(key, w, h) {
-  const sc = SCENES[key];
-  const out = new Float32Array(w * h);
-  const heights = sc.ridges.map((r) => {
-    const a = new Float32Array(w);
-    for (let x = 0; x < w; x++) a[x] = ridgeHeight(r, x / w);
-    return a;
-  });
-  const slopes = heights.map((a) => {
-    const s = new Float32Array(w), k = Math.max(1, Math.round(w / 400));
-    for (let x = 0; x < w; x++) s[x] = (a[Math.min(w - 1, x + k)] - a[Math.max(0, x - k)]) * (w / (2 * k)) * 0.15;
-    return s;
-  });
-  const aspect = w / h;
-  for (let y = 0; y < h; y++) {
-    const v = y / h;
-    for (let x = 0; x < w; x++) {
-      const u = x / w;
-      let l = sc.sky(u, v);
-      if (sc.stars && v < sc.horizon && hash2(x, y, 77) > 1 - sc.stars / (w * 0.6)) l = 0.75 + 0.25 * hash2(x, y, 78);
-      if (sc.disc) {
-        const d = sc.disc, dx = (u - d.x) * aspect, dy = v - d.y;
-        const r = Math.hypot(dx, dy);
-        const lit = r < d.r && (!d.crescent || Math.hypot(dx + d.r * d.crescent, dy - d.r * 0.25) > d.r * 0.92);
-        if (lit) l = d.lum;
-        else l += 0.12 * Math.exp(-(((r / d.r - 1) * 1.2) ** 2)) * (d.crescent ? 0.6 : 1.4);
-      }
-      for (let i = sc.ridges.length - 1; i >= 0; i--) {
-        const hgt = heights[i][x];
-        if (v < hgt) continue;
-        const r = sc.ridges[i], d = v - hgt;
-        // The crest catches side light; the effect decays below the ridge
-        // line, with streaks (gullies, wind ripples) carried down the face.
-        const face = Math.tanh(slopes[i][x] * 4) * Math.exp(-d * r.falloff);
-        // Surface relief: side-lit slope of a 2D noise field, sheared down the
-        // face so gullies run diagonally instead of in vertical curtains.
-        let streak = 0;
-        if (r.streaks) {
-          const fx = r.freq * 7, fy = r.freq * 5, e = 0.6 / w;
-          const gx = fbm((u + e) * fx + d * 3, d * fy, r.seed + 3, 3) - fbm((u - e) * fx + d * 3, d * fy, r.seed + 3, 3);
-          streak = r.streaks * Math.tanh(gx * w * 0.02) * Math.exp(-d * 3);
-        }
-        l = r.lum + r.shade * face + streak - r.darken * d + r.grain * (fbm(u * 90, v * 220, r.seed, 2) - 0.5);
-        break;
-      }
-      out[y * w + x] = clamp01(l);
-    }
-  }
-  const tree = sc.ridges.find((r) => r.tree);
-  if (tree) drawTree(out, w, h, tree.tree, heights[sc.ridges.indexOf(tree)]);
-  return out;
-}
-
-function drawTree(out, w, h, ux, ridge) {
-  const cx = Math.round(ux * w), ground = ridge[cx] * h;
-  const th = h * 0.2, trunkW = Math.max(2, w * 0.004);
-  const blobs = [];
-  for (let i = 0; i < 26; i++) {
-    const a = hash2(i, 1, 4) * Math.PI, rr = hash2(i, 2, 4);
-    blobs.push([cx + Math.cos(a) * th * 0.5 * rr, ground - th * 0.62 - Math.sin(a) * th * 0.35 * rr, th * (0.12 + 0.1 * hash2(i, 3, 4))]);
-  }
-  const y0 = Math.max(0, Math.floor(ground - th * 1.2)), y1 = Math.min(h, Math.ceil(ground + 2));
-  const x0 = Math.max(0, Math.floor(cx - th * 0.8)), x1 = Math.min(w, Math.ceil(cx + th * 0.8));
-  for (let y = y0; y < y1; y++)
-    for (let x = x0; x < x1; x++) {
-      let ink = y > ground - th * 0.5 && Math.abs(x - cx) < trunkW * (1.6 - (ground - y) / th);
-      for (const [bx, by, br] of blobs) if (!ink && (x - bx) ** 2 + (y - by) ** 2 < br * br * (0.8 + 0.4 * valueNoise(x / 6, y / 6, 2))) ink = true;
-      if (ink) out[y * w + x] = 0.1 + 0.06 * valueNoise(x / 3, y / 3, 8);
-    }
-}
 
 // ── Tone ─────────────────────────────────────────────────────────────────
 // Luminance → ink amount. Auto-levels on percentiles, polarity, gamma, a lift
@@ -332,9 +201,15 @@ export function asciiCells(g, gw, gh) {
 
 // ── Output ───────────────────────────────────────────────────────────────
 // Quantize coverage to 2^bits levels; returns level indices 0..levels-1.
-export function quantize(c, bits) {
+// With a width, an ordered (Bayer) offset dithers between adjacent levels,
+// so 16 levels read as continuous tone instead of banding.
+export function quantize(c, bits, w = 0) {
   const max = (1 << bits) - 1, out = new Uint8Array(c.length);
-  for (let i = 0; i < c.length; i++) out[i] = Math.round((c[i] / 255) * max);
+  for (let i = 0; i < c.length; i++) {
+    const d = w ? (BAYER8[((i / w) & 7) * 8 + ((i % w) & 7)] + 0.5) / 64 - 0.5 : 0;
+    const v = Math.round((c[i] / 255) * max + d);
+    out[i] = v < 0 ? 0 : v > max ? max : v;
+  }
   return out;
 }
 
@@ -367,12 +242,40 @@ export function packRows(idx, w, h, bits) {
   return out;
 }
 
+// PNG row filters (spec §9). Indexed images filter on bytes with bpp = 1.
+// Per row, keep the filter with the smallest sum of |signed bytes|: the
+// standard heuristic. Filter 0 is best for 1-bit art; Up and Paeth win on
+// smooth gradients like the continuous ink map.
+export function filterRows(raw, rowBytes, h) {
+  const stride = rowBytes + 1, out = new Uint8Array(raw.length), cand = new Uint8Array(rowBytes);
+  const paeth = (a, b, c) => {
+    const p = a + b - c, pa = Math.abs(p - a), pb = Math.abs(p - b), pc = Math.abs(p - c);
+    return pa <= pb && pa <= pc ? a : pb <= pc ? b : c;
+  };
+  for (let y = 0; y < h; y++) {
+    const o = y * stride + 1, up = o - stride;
+    let best = Infinity;
+    for (let f = 0; f < 5; f++) {
+      let sum = 0;
+      for (let i = 0; i < rowBytes; i++) {
+        const x = raw[o + i], a = i ? raw[o + i - 1] : 0, b = y ? raw[up + i] : 0, c = y && i ? raw[up + i - 1] : 0;
+        const v = (x - (f === 0 ? 0 : f === 1 ? a : f === 2 ? b : f === 3 ? (a + b) >> 1 : paeth(a, b, c))) & 255;
+        cand[i] = v;
+        sum += v < 128 ? v : 256 - v;
+      }
+      if (sum < best) { best = sum; out[o - 1] = f; out.set(cand, o); }
+    }
+  }
+  return out;
+}
+
 // Indexed PNG: every palette entry is the ink colour; tRNS carries the
 // coverage ramp. The same file works as a CSS alpha mask (theme applies the
 // colour) and as a plain pre-inked <img>.
 export async function encodePNG(idx, w, h, bits, rgb = [0, 0, 0]) {
   const levels = 1 << bits, max = levels - 1;
-  const raw = packRows(idx, w, h, bits);
+  const packed = packRows(idx, w, h, bits);
+  const raw = bits === 8 ? filterRows(packed, Math.ceil(w), h) : packed; // palette art: filter 0
   const zlib = new Uint8Array(await new Response(new Blob([raw]).stream().pipeThrough(new CompressionStream("deflate"))).arrayBuffer());
   const ihdr = new Uint8Array(13);
   const dv = new DataView(ihdr.buffer);

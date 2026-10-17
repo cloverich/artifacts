@@ -1,6 +1,6 @@
 # Horizon Plate: footers that dissolve into a landscape
 
-Study date: 17 Oct 2026. Evidence: three footer screenshots supplied by the user (a "Finance" footer with a galloping horse, a "Nova Labs" footer with camels under a moon, and a "GLAUX" footer posted by @AdityaSur11 on X). No live pages or source were inspected; everything below about the references is read from the images and labelled as observation or inference.
+Study date: 17 Oct 2026; revised the same day after first use. Evidence: three footer screenshots supplied by the user (a "Finance" footer with a galloping horse, a "Nova Labs" footer with camels under a moon, and a "GLAUX" footer posted by @AdityaSur11 on X). No live pages or source were inspected; everything below about the references is read from the images and labelled as observation or inference.
 
 ## What the references do
 
@@ -25,7 +25,7 @@ Inference: the GLAUX plate is an illustration in an engraved style rather than a
 
 The lab renders an **alpha mask**, not an image, and paints ink through it with CSS.
 
-1. **Luminance.** Draw the source to the plate's device-pixel size (cover-crop, vertical anchor), then Rec. 709 luminance.
+1. **Crop + luminance.** Cover-fit the source into the plate frame (fixed CSS width × height, per-plate zoom and crop position) at the algorithm's scale, then Rec. 709 luminance.
 2. **Tone → ink amount.** Auto-levels on the 0.5/99.5 percentiles; contrast about mid-grey; polarity (`ink the shadows` = 1 − L, `ink the light` = L); an **ink floor** (values below it become exactly zero so the sky is clean page colour); gamma; and a **dissolve**: ink is multiplied by a smoothstep ramp over the top N% of rows. Because the ramp scales *ink* rather than opacity, a dither dissolves dot by dot and an engraving thins line by line, which is how the references meet the page.
 3. **Marks.**
    - *Engrave*: ink where `|fract(u/s) − ½|·2 < tone·0.82`, edge antialiased over ~1px. `u = y` (flat), `y + A·Σsin(kx)` (guilloché), or `y − R·blur(ink)` (relief: lines bow over bright/dark masses). Optional second family at ~60° for deep tones. Ported from xylo's EngravingLab.
@@ -35,7 +35,8 @@ The lab renders an **alpha mask**, not an image, and paints ink through it with 
    - *Mezzotint*: threshold against white noise per dot. Closest to the Finance grain at 1 bit.
    - *Scanline*: fixed-width rows; tone sets row intensity, not width. Requires grey levels.
    - *ASCII*: cell average picks a glyph from ` .,:;-=+*#%@`; glyphs are rasterised to the mask.
-4. **Quantize + encode.** Coverage → 2, 4, 16, or 256 levels → **indexed PNG** written in the page (CRC32 + `CompressionStream('deflate')`). Every palette entry is the ink colour; `tRNS` carries the coverage ramp. One file is therefore both a CSS alpha mask and a ready-to-use pre-inked `<img>`.
+   - *Ink map*: no marks; the tone curve itself as continuous coverage. Shipped at half resolution.
+4. **Quantize + encode.** Coverage → 2, 4, 16, or 256 levels (continuous output can dither between levels) → **indexed PNG** written in the page (CRC32 + `CompressionStream('deflate')`). Every palette entry is the ink colour; `tRNS` carries the coverage ramp. One file is therefore both a CSS alpha mask and a ready-to-use pre-inked `<img>`.
 5. **Ink.** `background: var(--ink)` through `mask-image`. Theme switches recolour without re-rendering. Polarity cannot be switched by CSS: a light theme and a dark theme that both want "photographic positive" need two masks (or one mask and an inverted source).
 
 ## Why this is fast to load and to scroll
@@ -49,27 +50,39 @@ Readouts in the lab report crop, tone, mark, and encode times and the exact PNG 
 
 ### Measured file sizes
 
-A 2400 × 380 CSS px plate of the procedural "hills" scene, encoded by `mechanics.mjs` in Node 22 (17 Oct 2026). Procedural scenes are smoother than photographs, so treat these as lower bounds; a real photo can be 2–4× larger. In Chromium, the "dunes" plate exported at 2× and 2-bit came out at 220 KB.
+Read from the lab in headless Chromium with the sample photographs (17 Oct 2026). Wide plate is 2400 CSS px wide.
 
-| Plate | 1-bit | 2-bit | 4-bit |
-| --- | --- | --- | --- |
-| Engrave, 2× (4800 × 760) | 56 KB | 128 KB | 313 KB |
-| Engrave, 1× | 16 KB | 36 KB | 103 KB |
-| Halftone, 2× | 19 KB | 47 KB | 159 KB |
-| Scanline, 2× | 2 KB | 6 KB | 16 KB |
+| Plate | File | Size |
+| --- | --- | --- |
+| Dusk: Atkinson, 2 px dots, sunset, 2400×380 | 1200×190, 1-bit PNG | 8 KB |
+| Toile: guilloché engraving, sunset, 2400×380 | 4800×760 (2×), 1-bit PNG | 44 KB |
+| Mezzotint, 1 px grain, sailboat, 2400×380 | 2400×380, 1-bit PNG | 79 KB |
+| Scanline, sunset, 2400×380 (preview at 1×) | 2400×380, 16-level PNG | 23 KB |
+| Ink map, sailboat, 2400×620 | 1200×310 (½×), 256-level PNG | 140 KB |
+| same | lossy WebP (alpha is lossless) | 135 KB |
+| same | 16 levels, ordered dither | 45 KB |
+| same | 16 levels, no dither | 35 KB |
+| Ink map, narrow plate 820×300 | 410×150, lossy WebP | 29 KB |
 
-| Dither at its dot grid (1-bit) | 1 px dots | 2 px dots | 3 px dots |
-| --- | --- | --- | --- |
-| Atkinson | 24 KB | 7 KB | 3 KB |
-| Floyd–Steinberg | 32 KB | 9 KB | 4 KB |
-| Bayer | 4 KB | 2 KB | 1 KB |
-| Mezzotint | 42 KB | 12 KB | 5 KB |
+Conclusions:
 
-Conclusions: grey levels cost more than resolution. A 1-bit plate at 2× is 2–3× smaller than the same plate at 2-bit, and on a 1× screen the browser's downscale restores antialiasing anyway, so the lab defaults line and screen algorithms to 1-bit. Dithers at 2 px dots are under 15 KB. Structured noise (Bayer) compresses far better than random noise (mezzotint).
+- Grey levels cost more than resolution. A 1-bit plate at 2× beats the same plate at 2-bit, and on a 1× screen the browser's downscale restores antialiasing, so line and screen algorithms default to 1-bit.
+- Dithers at 2 px dots are under 10 KB. Random grain (mezzotint) is the most expensive 1-bit mark.
+- The continuous ink map is the expensive one. Shipping it at half resolution is free visually (soft tone upscales cleanly) and cuts pixels 4×. Sixteen levels without dither band visibly in soft cloud; with ordered dither the bands go but a faint screen shows in pale areas. WebP saves almost nothing because Chromium compresses its alpha plane losslessly, and Safari's canvas cannot encode WebP at all. Default: 8-bit PNG, about 140 KB for a 2400×620 plate, loaded below the fold.
+- PNG row filters (min-sum-of-abs heuristic) are applied to 8-bit output; 1-bit and 2-bit palette art stays on filter 0, which compresses best for it.
 
-## Crop, don't scale (responsive)
+## Crop, don't scale: two plates (responsive)
 
-Dither dots must stay at a fixed CSS size or they beat against the device pixel grid (moiré, uneven dots). The exported CSS therefore positions the mask at `50% 100%` with a fixed CSS size (e.g. 2400 px wide) and lets narrow screens crop the sides. Consequences: the subject should sit near the horizontal centre, and a phone sees only the middle ~400 px. If that loses the subject, ship a second, narrower plate behind a media query, or use `image-set()` per density. Line engravings tolerate scaling better (they are antialiased), so `mask-size: cover` is acceptable for them.
+Dots must stay at a fixed CSS size or they beat against the device pixel grid (moiré, uneven dots). So each plate has a fixed CSS width, is centred, and is clipped by the screen (`overflow: clip` on the footer, so the oversize pseudo-element never causes horizontal scroll). The lab previews exactly that geometry; the strip under the stage shows the whole plate and brackets what 1280, 1440, and 1920 px screens (or 360–768 px phones) actually see.
+
+One plate cannot serve both a phone and a desktop: a 2400 px plate on a 390 px phone shows a sliver. The lab therefore makes two, each with its own width, height, text overlap, crop, and zoom, sharing the algorithm and tone so they read as one print:
+
+- **Narrow** (600 / 820 / 1024 px wide), used below its own width.
+- **Wide** (1600 / 2400 / 3200 px), used from there up.
+
+The exported CSS is mobile first: the base rule masks with `plate-narrow`, and one `min-width` media query swaps `mask-image` to `plate-wide`. Browsers fetch images only for the declarations that apply, so each visitor downloads one plate; a resize across the breakpoint fetches the other. Text overlap is a footer `padding-bottom` of `height × (1 − overlap)`, set per plate, with `min-height` equal to the plate height so the clip never trims its top.
+
+**Masks load in CORS mode.** Verified in Chromium: the exported CSS paints nothing when the page is opened from `file://` (an opaque origin), and paints correctly from a local HTTP server. Serve plates from the same origin, or from a CDN that sends `Access-Control-Allow-Origin`. The lab itself is unaffected because its preview masks are `blob:` URLs.
 
 ## Alternatives
 
@@ -88,7 +101,15 @@ Real engraving bends `u` along image structure. A practical next step: structure
 - The reference implementations are unknown; they may be static images with baked colour, not masks.
 - The Nova Labs plate shows blue texture inside the sand, which suggests either a two-colour dither (ink and page) or a texture overlay. The lab models one ink over the page colour.
 - Browser coverage of `image-rendering` on masks outside Chromium is unverified.
-- Procedural scenes are stand-ins. Real photographs will want different tone defaults.
+- Whether `content-visibility: auto` on the footer defers the mask fetch was not measured.
+
+## Sample photographs
+
+Three real photographs taken by a person (not generated), supplied by the photographer, who gives permission to use them however you like. Re-encoded at 1600 px wide with metadata stripped; stored in `photos/` via Git LFS and inlined into the built page.
+
+- `sailboat.jpg`: a sailboat under low cloud in the Salish Sea, Washington, on the way to Orcas Island. iPhone.
+- `sunset.jpg`: sunset over Lake Washington, Washington, with a mountain range silhouetted on the horizon. Mirrorless camera (OM System OM-5 or Sony; unconfirmed).
+- `forest.jpg`: fog on a disc golf course in Washington; the same photo is used in xylo's image lab. iPhone.
 
 ## Sources
 

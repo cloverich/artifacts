@@ -8,7 +8,13 @@ const root = new URL("./", import.meta.url);
 const read = (name) => readFile(new URL(name, root), "utf8");
 const escape = (s) => s.replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;");
 
-const code = (await read("mechanics.mjs")).replace(/^export /gm, "") + "\n" + (await read("app.js"));
+// Photos ship inside the page as data URIs, so the file opens from disk.
+let app = await read("app.js");
+for (const [, name] of app.matchAll(/"photos\/([\w-]+)\.jpg"/g)) {
+  const b64 = (await readFile(new URL(`photos/${name}.jpg`, root))).toString("base64");
+  app = app.replace(`"photos/${name}.jpg"`, () => `"data:image/jpeg;base64,${b64}"`);
+}
+const code = (await read("mechanics.mjs")).replace(/^export /gm, "") + "\n" + app;
 new Script(code); // parse check
 const css = await read("style.css");
 const analysis = await read("analysis.md");

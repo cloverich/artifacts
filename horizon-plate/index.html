@@ -21,7 +21,7 @@
         <p class="kicker">Field notes · No. 014</p>
         <h2>Where the page ends, the land begins</h2>
         <p>The last paragraph of a long read should not hit a wall. Here the page keeps going: the footer has no background of its own, and the plate below is only ink. Its sky is the page.</p>
-        <p>Scroll the stage. Nothing here repaints. The plate is one small PNG used as a mask, and the colour is CSS.</p>
+        <p>Nothing here repaints on scroll. The plate is one small image used as a mask, and the colour is CSS.</p>
       </article>
       <footer class="site-footer" id="siteFooter">
         <div class="plate" id="plate" aria-hidden="true"></div>
@@ -40,19 +40,18 @@
         <p class="foot-legal"><span>© 2026 Pinecoder</span><span>Set in ink, rendered once.</span></p>
       </footer>
     </div>
+    <canvas class="overview" id="overview" aria-label="The whole plate, with the slices common screen widths show"></canvas>
     <div class="readout" id="readout" aria-live="polite">Rendering…</div>
   </section>
 
   <aside class="panel" aria-label="Controls">
     <fieldset>
       <legend>Source</legend>
-      <div class="seg" id="scenes"></div>
+      <div class="seg" id="photos"></div>
       <label class="drop" id="drop" for="file">
         <input id="file" type="file" accept="image/*">
         <span id="dropText"><b>Drop, paste, or choose an image.</b> It stays in this browser.</span>
       </label>
-      <label class="row" for="anchor"><span>Crop anchor</span><output id="anchorOut"></output></label>
-      <input id="anchor" type="range" min="0" max="1" step="0.01">
     </fieldset>
 
     <fieldset>
@@ -68,8 +67,10 @@
       <legend>Algorithm</legend>
       <div class="seg seg-wrap" id="algos"></div>
       <p class="hint" id="algoNote"></p>
-      <label class="row" for="size"><span id="sizeLabel">Size</span><output id="sizeOut"></output></label>
-      <input id="size" type="range">
+      <div class="sub-always" id="sizeRow">
+        <label class="row" for="size"><span id="sizeLabel">Size</span><output id="sizeOut"></output></label>
+        <input id="size" type="range">
+      </div>
       <div class="sub" data-for="engrave">
         <div class="seg" id="fields"></div>
         <label class="check" for="hatch"><input id="hatch" type="checkbox"> Cross-hatch deep tones</label>
@@ -96,10 +97,19 @@
 
     <fieldset>
       <legend>Plate</legend>
+      <div class="seg" id="plates"></div>
+      <label class="row-1" for="plateW"><span>Width</span><select id="plateW"></select></label>
+      <p class="hint" id="screenNote"></p>
       <label class="row" for="plateH"><span>Height</span><output id="plateHOut"></output></label>
-      <input id="plateH" type="range" min="200" max="620" step="10">
+      <input id="plateH" type="range" min="160" max="720" step="10">
       <label class="row" for="overlap"><span>Text over sky</span><output id="overlapOut"></output></label>
       <input id="overlap" type="range" min="0" max="0.7" step="0.01">
+      <label class="row" for="ax"><span>Crop, left to right</span><output id="axOut"></output></label>
+      <input id="ax" type="range" min="0" max="1" step="0.01">
+      <label class="row" for="ay"><span>Crop, top to bottom</span><output id="ayOut"></output></label>
+      <input id="ay" type="range" min="0" max="1" step="0.01">
+      <label class="row" for="zoom"><span>Zoom</span><output id="zoomOut"></output></label>
+      <input id="zoom" type="range" min="1" max="3" step="0.05">
       <div class="seg" id="views"></div>
     </fieldset>
 
@@ -107,10 +117,10 @@
       <legend>Ship</legend>
       <div class="row-2">
         <label for="bits">Levels <select id="bits"><option value="auto">Auto</option><option value="1">2 · 1-bit</option><option value="2">4 · 2-bit</option><option value="4">16 · 4-bit</option><option value="8">256 · 8-bit</option></select></label>
-        <label for="exportW">Width <select id="exportW"><option value="1600">1600 px</option><option value="2400" selected>2400 px</option><option value="3200">3200 px</option></select></label>
+        <label for="format">Format <select id="format"><option value="png">PNG, indexed</option><option value="webp">WebP, lossy</option></select></label>
       </div>
       <div class="actions">
-        <button id="download" type="button">Export PNG</button>
+        <button id="download" type="button">Export this plate</button>
         <button id="copy" type="button">Copy CSS</button>
       </div>
       <p class="hint" id="exportNote"></p>
@@ -122,7 +132,7 @@
 <section class="notes" aria-labelledby="howTitle">
   <h2 id="howTitle">How the plate is made</h2>
   <ol class="pipeline">
-    <li><b>Luminance.</b> The source is drawn to the plate's exact device-pixel size, cropped with the anchor, and reduced to Rec. 709 luminance.</li>
+    <li><b>Crop.</b> Each plate has a fixed CSS width and height. The photo is cover-fitted into that frame (zoom and crop position are per plate) and reduced to Rec. 709 luminance. The preview is that frame, centred and cropped by the screen, exactly as it ships.</li>
     <li><b>Tone.</b> Auto-levels on the 0.5 / 99.5 percentiles, contrast, then polarity: which end of the range takes ink. The ink floor drops faint ink to zero, so the sky meets the page colour exactly. The dissolve multiplies ink by a ramp, so dots and lines thin out instead of fading in opacity.</li>
     <li><b>Mark-making.</b> Line fields and screens run at full resolution with one pixel of analytic antialiasing. Dithers run on their own dot grid, one cell per dot.</li>
     <li><b>Quantize and encode.</b> Coverage becomes 2 to 256 levels in an indexed PNG. Every palette entry is the ink colour, and transparency carries the coverage, so the file works as a CSS mask and as a plain image.</li>
@@ -134,9 +144,14 @@
       <li>Render once, offline or in this lab. The shipped page runs no script for the plate.</li>
       <li>Never use <code>background-attachment: fixed</code> or a live filter on the plate. Both repaint on scroll.</li>
       <li>Ship dithers at their dot grid and let the GPU scale them. Ship lines at 2× and let them scale smoothly.</li>
-      <li>Keep dither dots at a fixed CSS size: crop the plate on narrow screens rather than resizing it, or the grain beats against the pixel grid.</li>
+      <li>Keep dots at a fixed CSS size: crop the plate rather than resizing it, or the grain beats against the pixel grid. Ship two plates, narrow and wide, behind one media query; browsers fetch only the mask that applies.</li>
       <li>Lazy work is free: a footer is below the fold, so <code>content-visibility: auto</code> keeps it out of first paint.</li>
     </ul>
+  </div>
+  <div class="rules">
+    <h3>Sample photographs</h3>
+    <p>These are real photographs taken by a person, not generated images. The photographer gives permission to use them however you like.</p>
+    <ul id="credits" class="credits"></ul>
   </div>
   <details class="full-study"><summary>Full study: references, algorithms, alternatives, costs</summary><!-- RESEARCH --></details>
 </section>

@@ -1,24 +1,45 @@
-// Horizon Plate lab. Mechanics (renderScene, tone, engrave, …) are defined
-// in mechanics.mjs; build.mjs inlines them ahead of this file. During
-// development, open dist/horizon-plate.html after `node build.mjs`.
+// Horizon Plate lab. Mechanics (tone, engrave, encodePNG, …) are defined in
+// mechanics.mjs; build.mjs inlines them ahead of this file and replaces the
+// photos/*.jpg paths with data URIs. Open dist/horizon-plate.html after
+// `node build.mjs`.
+//
+// The preview is the shipped page: each plate has a fixed CSS width, is
+// centred, and is cropped by the screen. What you see is what Export saves.
 
 const $ = (id) => document.getElementById(id);
 
+// scale: compute pixels per CSS pixel. Dithers compute at 1 (one cell per
+// dot, pixelated on screen); lines at 2 for export; the ink map at ½, since
+// continuous tone scales up smoothly and costs 4× fewer pixels.
 const ALGOS = {
-  engrave: { label: "Engrave", size: [2, 8, 0.5], sizeLabel: "Line pitch", grid: false, bits: 1,
+  engrave: { label: "Engrave", size: [2, 8, 0.5], sizeLabel: "Line pitch", bits: 1, exportScale: 2,
     note: "Line width carries tone. Intaglio, banknotes, toile." },
-  halftone: { label: "Halftone", size: [2, 10, 0.5], sizeLabel: "Screen pitch", grid: false, bits: 1,
+  halftone: { label: "Halftone", size: [2, 10, 0.5], sizeLabel: "Screen pitch", bits: 1, exportScale: 2,
     note: "Dot area carries tone on a rotated screen. Newsprint." },
-  bayer: { label: "Bayer", size: [1, 4, 1], sizeLabel: "Dot", grid: true, bits: 1,
+  bayer: { label: "Bayer", size: [1, 4, 1], sizeLabel: "Dot", bits: 1, grid: true, exportScale: 1,
     note: "Ordered 8×8 threshold. A visible crosshatch; early screens." },
-  diffuse: { label: "Diffuse", size: [1, 4, 1], sizeLabel: "Dot", grid: true, bits: 1,
+  diffuse: { label: "Diffuse", size: [1, 4, 1], sizeLabel: "Dot", bits: 1, grid: true, exportScale: 1,
     note: "Error diffusion. Organic grain that preserves tone." },
-  mezzotint: { label: "Mezzotint", size: [1, 4, 1], sizeLabel: "Grain", grid: true, bits: 1,
+  mezzotint: { label: "Mezzotint", size: [1, 4, 1], sizeLabel: "Grain", bits: 1, grid: true, exportScale: 1,
     note: "Random threshold. Pure grain, no structure." },
-  scanline: { label: "Scanline", size: [2, 8, 0.5], sizeLabel: "Row pitch", grid: false, bits: 4,
+  scanline: { label: "Scanline", size: [2, 8, 0.5], sizeLabel: "Row pitch", bits: 4, exportScale: 2,
     note: "Fixed rows whose brightness carries tone. Needs grey levels, so it costs bytes." },
-  ascii: { label: "ASCII", size: [5, 14, 1], sizeLabel: "Glyph width", grid: false, bits: 1,
+  ascii: { label: "ASCII", size: [5, 14, 1], sizeLabel: "Glyph width", bits: 1, exportScale: 2,
     note: "Cell brightness picks a glyph from “ .,:;-=+*#%@”." },
+  inkmap: { label: "Ink map", size: null, bits: 8, exportScale: 0.5, fixedScale: 0.5,
+    note: "Continuous ink, no marks: the tone curve itself. Ships at half resolution; soft tone scales up cleanly." },
+};
+
+const PHOTOS = {
+  sailboat: { label: "Sailboat", src: "photos/sailboat.jpg", title: "Sailboat under low cloud",
+    where: "Salish Sea, Washington, on the way to Orcas Island", camera: "iPhone",
+    crop: { wide: { ax: 0.55, ay: 0.64 }, narrow: { ax: 0.8, ay: 0.78 } } },
+  sunset: { label: "Sunset", src: "photos/sunset.jpg", title: "Sunset over Lake Washington",
+    where: "Lake Washington, Washington; a mountain range silhouetted on the far horizon", camera: "Mirrorless camera (OM System OM-5 or Sony; model unconfirmed)",
+    crop: { wide: { ax: 0.5, ay: 0.98 }, narrow: { ax: 0.6, ay: 1 } } },
+  forest: { label: "Forest", src: "photos/forest.jpg", title: "Fog on a disc golf course",
+    where: "Washington; also used in xylo’s image lab", camera: "iPhone",
+    crop: { wide: { ax: 0.5, ay: 0.85 }, narrow: { ax: 0.45, ay: 0.85 } } },
 };
 
 const SERIF = '"Iowan Old Style", "Palatino Linotype", Palatino, Georgia, serif';
@@ -28,99 +49,107 @@ const SANS = 'system-ui, -apple-system, "Segoe UI", Roboto, sans-serif';
 // two destinations, xylo and pinecoder.dev, in each of their modes.
 const THEMES = {
   toile: { label: "Toile · cream and cobalt", bg: "#f5f1e6", text: "#22328a", muted: "#56609a", ink: "#2747c4", rule: "#d8d1bd", font: SERIF,
-    scene: "hills", algo: "engrave", size: 3, field: "wave", hatch: true, inkLight: false, lift: 0.16, fade: 0.3, contrast: 1.15, gamma: 1.1 },
-  dune: { label: "Night dune · ultramarine and sand", bg: "#2a3a9e", text: "#f3efe4", muted: "#c9cdf0", ink: "#e7b46a", rule: "#5866bd", font: SANS,
-    scene: "dunes", algo: "diffuse", size: 2, kernel: "atkinson", inkLight: true, lift: 0.14, fade: 0.25, contrast: 0.9, gamma: 1.5 },
+    photo: "sunset", algo: "engrave", size: 3, field: "wave", hatch: true, inkLight: false, lift: 0.4, fade: 0.2, contrast: 1.3, gamma: 1 },
+  dune: { label: "Dusk · ultramarine and sand", bg: "#2a3a9e", text: "#f3efe4", muted: "#c9cdf0", ink: "#e7b46a", rule: "#5866bd", font: SANS,
+    photo: "sunset", algo: "diffuse", size: 2, kernel: "atkinson", inkLight: false, lift: 0.18, fade: 0.2, contrast: 1, gamma: 1.2 },
   mezzo: { label: "Mezzotint · grey grain", bg: "#cdcdca", text: "#1d1e1e", muted: "#484a49", ink: "#1b1c1c", rule: "#a2a39f", font: SANS,
-    scene: "hills", algo: "mezzotint", size: 1, inkLight: false, lift: 0.06, fade: 0.4, contrast: 1, gamma: 1.25 },
+    photo: "sailboat", algo: "mezzotint", size: 1, inkLight: false, lift: 0.08, fade: 0.4, contrast: 1, gamma: 1.2 },
   xylo: { label: "xylo · soft black, neutral ink", bg: "#17181b", text: "#eceff5", muted: "#97a3bb", ink: "#c3cddd", rule: "#343b46", font: SANS,
-    scene: "range", algo: "engrave", size: 3, field: "relief", hatch: false, inkLight: false, lift: 0.12, fade: 0.3, contrast: 1.1, gamma: 1.2 },
+    photo: "sunset", algo: "engrave", size: 3, field: "relief", hatch: false, inkLight: false, lift: 0.2, fade: 0.25, contrast: 1.1, gamma: 1.2 },
   xyloAmber: { label: "xylo · sodium amber scanline", bg: "#17181b", text: "#eceff5", muted: "#97a3bb", ink: "#e89b3c", rule: "#343b46", font: SANS,
-    scene: "dunes", algo: "scanline", size: 3, inkLight: true, lift: 0.18, fade: 0.25, contrast: 1.2, gamma: 1.1 },
+    photo: "sunset", algo: "scanline", size: 3, inkLight: false, lift: 0.2, fade: 0.25, contrast: 1.1, gamma: 1.1 },
   pineLight: { label: "pinecoder · light", bg: "#f6f8fa", text: "#000000", muted: "#626975", ink: "#28292a", rule: "#d1d3d6", font: SANS,
-    scene: "range", algo: "halftone", size: 4, angle: 45, inkLight: false, lift: 0.2, fade: 0.3, contrast: 1.1, gamma: 1.1 },
-  // Dark mode can't reuse the light plate's polarity: inking the shadows of a
-  // day scene in a light ink gives a negative. This preset inks the light of
-  // a night scene instead, a photographic positive.
+    photo: "sailboat", algo: "inkmap", inkLight: false, lift: 0.1, fade: 0.3, contrast: 1.1, gamma: 1.1, wide: { height: 620, overlap: 0 } },
   pineDark: { label: "pinecoder · dark", bg: "#17181b", text: "#eceff5", muted: "#97a3bb", ink: "#a7baed", rule: "#343b46", font: SANS,
-    scene: "dunes", algo: "halftone", size: 4, angle: 45, inkLight: true, lift: 0.14, fade: 0.25, contrast: 1, gamma: 1.4 },
+    photo: "sailboat", algo: "inkmap", inkLight: false, lift: 0.1, fade: 0.3, contrast: 1.1, gamma: 1.2, wide: { height: 620, overlap: 0 } },
+};
+
+const PLATE_DEFAULTS = {
+  wide: { width: 2400, height: 380, overlap: 0.4, ax: 0.5, ay: 0.8, zoom: 1 },
+  narrow: { width: 820, height: 300, overlap: 0.25, ax: 0.5, ay: 0.8, zoom: 1 },
 };
 
 const S = {
-  source: { kind: "scene", key: "dunes" },
-  anchor: 0.85,
+  source: { kind: "photo", key: "sunset" },
+  plate: "wide",
+  plates: structuredClone(PLATE_DEFAULTS),
   theme: "dune",
   algo: "diffuse",
-  sizes: Object.fromEntries(Object.entries(ALGOS).map(([k, a]) => [k, a.size[0] + (a.grid ? 1 : 1.5)])),
+  sizes: Object.fromEntries(Object.entries(ALGOS).map(([k, a]) => [k, a.size ? a.size[0] + (a.grid ? 1 : 1.5) : 0])),
   field: "wave", hatch: true, angle: 45, kernel: "atkinson",
-  inkLight: true, lift: 0.12, fade: 0.25, contrast: 1, gamma: 1,
-  plateH: 380, overlap: 0.42, view: "plate", bits: "auto", exportW: 2400,
+  inkLight: false, lift: 0.12, fade: 0.25, contrast: 1, gamma: 1,
+  view: "plate", bits: "auto", format: "png",
   bg: "", ink: "",
 };
+const P = () => S.plates[S.plate];
+
+// Choosing a photo also frames it: each has a crop that keeps its subject
+// inside the centre of both plates.
+function usePhoto(key) {
+  S.source = { kind: "photo", key };
+  for (const which of ["wide", "narrow"]) Object.assign(S.plates[which], { zoom: 1 }, PHOTOS[key].crop[which]);
+}
 
 // ── Sources ──────────────────────────────────────────────────────────────
-const sceneCanvases = new Map();
-function sceneCanvas(key) {
-  if (sceneCanvases.has(key)) return sceneCanvases.get(key);
-  const w = 1400, h = 640, lum = renderScene(key, w, h);
-  const c = document.createElement("canvas");
-  c.width = w; c.height = h;
-  const ctx = c.getContext("2d"), img = ctx.createImageData(w, h);
-  for (let i = 0; i < lum.length; i++) {
-    const v = lum[i] * 255;
-    img.data[i * 4] = img.data[i * 4 + 1] = img.data[i * 4 + 2] = v;
-    img.data[i * 4 + 3] = 255;
-  }
-  ctx.putImageData(img, 0, 0);
-  sceneCanvases.set(key, c);
-  return c;
+const photoImages = new Map();
+function photoImage(key) {
+  if (!photoImages.has(key))
+    photoImages.set(key, new Promise((resolve, reject) => {
+      const img = new Image();
+      img.decoding = "async";
+      img.onload = () => resolve(img);
+      img.onerror = reject;
+      img.src = PHOTOS[key].src;
+    }));
+  return photoImages.get(key);
 }
-const sourceImage = () => (S.source.kind === "file" ? S.source.img : sceneCanvas(S.source.key));
-const sourceId = () => (S.source.kind === "file" ? "file:" + S.source.name : "scene:" + S.source.key);
+const sourceImage = () => (S.source.kind === "file" ? Promise.resolve(S.source.img) : photoImage(S.source.key));
+const sourceId = () => (S.source.kind === "file" ? "file:" + S.source.name : "photo:" + S.source.key);
 
-// Cover-crop the source to W×H, anchored vertically, and take luminance.
+// Cover-crop the source into the plate frame (W×H compute px), zoomed and
+// anchored, and take Rec. 709 luminance.
 let lumCache = { key: "", lum: null };
-function luminance(W, H, cache = true) {
-  const key = `${sourceId()}|${W}|${H}|${S.anchor}`;
+function luminance(src, W, H, p, cache = true) {
+  const key = `${sourceId()}|${W}|${H}|${p.ax}|${p.ay}|${p.zoom}`;
   if (cache && lumCache.key === key) return lumCache.lum;
-  const src = sourceImage();
   const sw = src.naturalWidth || src.width, sh = src.naturalHeight || src.height;
   const c = document.createElement("canvas");
   c.width = W; c.height = H;
   const ctx = c.getContext("2d", { willReadFrequently: true });
-  const k = Math.max(W / sw, H / sh), dw = sw * k, dh = sh * k;
+  const k = Math.max(W / sw, H / sh) * p.zoom, dw = sw * k, dh = sh * k;
   ctx.imageSmoothingQuality = "high";
-  ctx.drawImage(src, (W - dw) / 2, (H - dh) * S.anchor, dw, dh);
+  ctx.drawImage(src, (W - dw) * p.ax, (H - dh) * p.ay, dw, dh);
   const px = ctx.getImageData(0, 0, W, H).data, lum = new Float32Array(W * H);
-  for (let i = 0, p = 0; i < lum.length; i++, p += 4) lum[i] = (0.2126 * px[p] + 0.7152 * px[p + 1] + 0.0722 * px[p + 2]) / 255;
+  for (let i = 0, q = 0; i < lum.length; i++, q += 4) lum[i] = (0.2126 * px[q] + 0.7152 * px[q + 1] + 0.0722 * px[q + 2]) / 255;
   if (cache) lumCache = { key, lum };
   return lum;
 }
 
 // ── Pipeline ─────────────────────────────────────────────────────────────
-// Returns coverage at mask resolution plus how many device pixels one mask
-// pixel spans (1 for full-resolution algorithms, the cell for dithers).
-function compute(W, H, dpr, cache = true) {
+// Renders plate p at `scale` compute px per CSS px. Returns coverage at mask
+// resolution and the CSS size that mask maps onto.
+function compute(src, p, scale, cache = true) {
   const a = ALGOS[S.algo], size = S.sizes[S.algo];
+  const W = Math.max(1, Math.round(p.width * scale)), H = Math.max(1, Math.round(p.height * scale));
   const ms = {}, t0 = performance.now();
-  const lum = luminance(W, H, cache);
+  const lum = luminance(src, W, H, p, cache);
   const t1 = performance.now();
   const t = tone(lum, W, H, { contrast: S.contrast, gamma: S.gamma, lift: S.lift, fade: S.fade, inkLight: S.inkLight });
   const t2 = performance.now();
   let cov, cw = W, ch = H, cell = 1;
   if (a.grid) {
-    cell = Math.max(1, Math.round(size * dpr));
+    cell = Math.max(1, Math.round(size * scale));
     const d = downsample(t, W, H, cell);
     cw = d.gw; ch = d.gh;
     cov = S.algo === "bayer" ? bayer(d.g, cw, ch) : S.algo === "diffuse" ? diffuse(d.g, cw, ch, S.kernel) : mezzotint(d.g, cw, ch);
-  } else if (S.algo === "engrave") cov = engrave(t, W, H, { pitch: size * dpr, field: S.field, hatch: S.hatch });
-  else if (S.algo === "halftone") cov = halftone(t, W, H, { pitch: size * dpr, angle: (S.angle * Math.PI) / 180 });
-  else if (S.algo === "scanline") cov = scanline(t, W, H, { pitch: Math.max(2, Math.round(size * dpr)) });
-  else cov = asciiPlate(t, W, H, size * dpr);
-  const t3 = performance.now();
-  ms.source = t1 - t0; ms.tone = t2 - t1; ms.marks = t3 - t2;
+  } else if (S.algo === "engrave") cov = engrave(t, W, H, { pitch: size * scale, field: S.field, hatch: S.hatch });
+  else if (S.algo === "halftone") cov = halftone(t, W, H, { pitch: size * scale, angle: (S.angle * Math.PI) / 180 });
+  else if (S.algo === "scanline") cov = scanline(t, W, H, { pitch: Math.max(2, Math.round(size * scale)) });
+  else if (S.algo === "ascii") cov = asciiPlate(t, W, H, size * scale);
+  else cov = Uint8Array.from(t, (v) => v * 255 + 0.5);
+  ms.crop = t1 - t0; ms.tone = t2 - t1; ms.marks = performance.now() - t2;
   const bits = S.bits === "auto" ? a.bits : +S.bits;
-  return { cov, cw, ch, cell, bits, ms, t, lum };
+  return { cov, cw, ch, bits, ms, lum, W, H, cssW: (cw * cell) / scale, cssH: (ch * cell) / scale, scale };
 }
 
 function asciiPlate(t, W, H, glyphW) {
@@ -147,48 +176,109 @@ const hexRgb = (h) => [1, 3, 5].map((i) => parseInt(h.slice(i, i + 2), 16));
 const kb = (n) => (n < 1024 ? `${n} B` : `${(n / 1024).toFixed(1)} KB`);
 const fmt = (n) => (n < 10 ? n.toFixed(1) : Math.round(n));
 
-// ── Preview render ───────────────────────────────────────────────────────
+// WebP is lossy colour plus a losslessly compressed alpha plane. Safari's
+// canvas cannot encode it and returns PNG instead, so check the type.
+async function encode(r) {
+  if (S.format === "webp") {
+    const c = new OffscreenCanvas(r.cw, r.ch), ctx = c.getContext("2d"), img = ctx.createImageData(r.cw, r.ch), [ir, ig, ib] = hexRgb(S.ink);
+    for (let i = 0; i < r.cov.length; i++) { img.data[i * 4] = ir; img.data[i * 4 + 1] = ig; img.data[i * 4 + 2] = ib; img.data[i * 4 + 3] = r.cov[i]; }
+    ctx.putImageData(img, 0, 0);
+    const blob = await c.convertToBlob({ type: "image/webp", quality: 0.8 });
+    if (blob.type === "image/webp") return { blob, ext: "webp", label: "WebP" };
+  }
+  // Continuous output dithers between levels; mark-making output is already
+  // near-binary and stays crisp.
+  const smoothTone = S.algo === "inkmap" || S.algo === "scanline";
+  const png = await encodePNG(quantize(r.cov, r.bits, smoothTone && r.bits < 8 ? r.cw : 0), r.cw, r.ch, r.bits, hexRgb(S.ink));
+  return { blob: new Blob([png], { type: "image/png" }), ext: "png", label: `${1 << r.bits}-level PNG` };
+}
+
+// ── Preview ──────────────────────────────────────────────────────────────
 const plate = $("plate"), inspect = $("inspect");
-let token = 0, maskUrl = "", lastPreview = null;
+let token = 0, maskUrl = "";
+
+function previewScale() {
+  const a = ALGOS[S.algo], p = P();
+  if (a.fixedScale) return a.fixedScale;
+  if (a.grid) return 1;
+  const dpr = Math.min(2, window.devicePixelRatio || 1);
+  return p.width * p.height * dpr * dpr <= 4e6 ? dpr : 1;
+}
 
 async function render() {
   const my = ++token;
-  const rect = plate.getBoundingClientRect();
-  if (rect.width < 10) return;
-  const dpr = Math.min(2, window.devicePixelRatio || 1);
-  const W = Math.round(rect.width * dpr), H = Math.round(rect.height * dpr);
-  const r = compute(W, H, dpr);
+  const src = await sourceImage().catch(() => null);
+  if (my !== token) return;
+  if (!src) { $("readout").textContent = "The photo could not be loaded."; return; }
+  const scale = previewScale();
+  const r = compute(src, P(), scale);
   const te = performance.now();
-  const png = await encodePNG(quantize(r.cov, r.bits), r.cw, r.ch, r.bits, hexRgb(S.ink));
+  const enc = await encode(r);
   r.ms.encode = performance.now() - te;
   if (my !== token) return;
-  const url = URL.createObjectURL(new Blob([png], { type: "image/png" }));
+  const url = URL.createObjectURL(enc.blob);
+  plate.style.width = `${r.cssW}px`;
+  plate.style.height = `${r.cssH}px`;
   plate.style.setProperty("--mask", `url("${url}")`);
-  plate.style.setProperty("--mask-size", `${(r.cw * r.cell) / dpr}px ${(r.ch * r.cell) / dpr}px`);
-  plate.dataset.pixelated = String(ALGOS[S.algo].grid);
+  plate.dataset.pixelated = String(!!ALGOS[S.algo].grid);
   if (maskUrl) URL.revokeObjectURL(maskUrl);
   maskUrl = url;
-  lastPreview = { ...r, bytes: png.length, W, H, dpr };
-  drawInspect(r, W, H);
+  drawInspect(r);
+  drawOverview(url, r);
   const total = Object.values(r.ms).reduce((s, v) => s + v, 0);
+  const a = ALGOS[S.algo], exp = a.exportScale;
   $("readout").innerHTML =
-    `Preview mask <b>${r.cw}×${r.ch}</b> · ${r.cell > 1 ? `${r.cell}px dots, pixelated` : `${dpr}× device`} · <b>${1 << r.bits} levels</b> · <b>${kb(png.length)}</b><br>` +
-    `crop ${fmt(r.ms.source)} ms · tone ${fmt(r.ms.tone)} · marks ${fmt(r.ms.marks)} · encode ${fmt(r.ms.encode)} · <b>${fmt(total)} ms</b> once; 0 ms per scroll`;
+    `${S.plate === "wide" ? "Wide" : "Narrow"} plate <b>${Math.round(r.cssW)}×${Math.round(r.cssH)} CSS px</b> · preview mask <b>${r.cw}×${r.ch}</b> · ${enc.label} · <b>${kb(enc.blob.size)}</b>` +
+    (scale !== exp && !a.grid ? ` (export at ${exp}× is larger)` : "") + "<br>" +
+    `crop ${fmt(r.ms.crop)} ms · tone ${fmt(r.ms.tone)} · marks ${fmt(r.ms.marks)} · encode ${fmt(r.ms.encode)} · <b>${fmt(total)} ms</b> once; nothing runs on scroll`;
   updateSnippet();
 }
 
-function drawInspect(r, W, H) {
+function drawInspect(r) {
   inspect.hidden = S.view === "plate";
-  plate.style.visibility = S.view === "plate" ? "" : "hidden"; // keep its box: it is the size probe
+  plate.style.visibility = S.view === "plate" ? "" : "hidden";
   if (S.view === "plate") return;
-  inspect.width = W; inspect.height = H;
-  const ctx = inspect.getContext("2d"), img = ctx.createImageData(W, H), [ir, ig, ib] = hexRgb(S.ink);
-  for (let i = 0; i < W * H; i++) {
-    const p = i * 4;
-    if (S.view === "tone") { img.data[p] = ir; img.data[p + 1] = ig; img.data[p + 2] = ib; img.data[p + 3] = r.t[i] * 255; }
-    else { img.data[p] = img.data[p + 1] = img.data[p + 2] = r.lum[i] * 255; img.data[p + 3] = 255; }
+  inspect.width = r.W; inspect.height = r.H;
+  inspect.style.width = `${P().width}px`;
+  inspect.style.height = `${P().height}px`;
+  const ctx = inspect.getContext("2d"), img = ctx.createImageData(r.W, r.H);
+  for (let i = 0; i < r.W * r.H; i++) {
+    img.data[i * 4] = img.data[i * 4 + 1] = img.data[i * 4 + 2] = r.lum[i] * 255;
+    img.data[i * 4 + 3] = 255;
   }
   ctx.putImageData(img, 0, 0);
+}
+
+// The whole plate at a glance, with the slices that common screens show.
+const SCREENS = { wide: [1280, 1440, 1920], narrow: [360, 390, 430, 768] };
+function drawOverview(url, r) {
+  const c = $("overview"), box = c.getBoundingClientRect(), dpr = window.devicePixelRatio || 1;
+  const full = Math.max(1, Math.round(box.width));
+  const h = Math.min(140, Math.round((full * r.cssH) / r.cssW)), w = Math.round((h * r.cssW) / r.cssH), x0 = Math.round((full - w) / 2);
+  c.width = full * dpr; c.height = (h + 16) * dpr;
+  c.style.height = `${h + 16}px`;
+  const ctx = c.getContext("2d");
+  ctx.scale(dpr, dpr);
+  ctx.translate(x0, 0);
+  const img = new Image();
+  img.onload = () => {
+    ctx.fillStyle = S.bg;
+    ctx.fillRect(0, 0, w, h);
+    ctx.imageSmoothingEnabled = !ALGOS[S.algo].grid;
+    ctx.drawImage(img, 0, 0, w, h);
+    const css = getComputedStyle(document.documentElement);
+    ctx.strokeStyle = ctx.fillStyle = css.getPropertyValue("--accent").trim();
+    ctx.font = "10px ui-monospace, Menlo, monospace";
+    ctx.textAlign = "center";
+    ctx.lineWidth = 1;
+    const k = w / r.cssW;
+    SCREENS[S.plate].filter((s) => s < r.cssW).forEach((s, i) => {
+      const x0 = (w - s * k) / 2, x1 = (w + s * k) / 2, y = h + 4 + (i % 2) * 6;
+      ctx.beginPath(); ctx.moveTo(x0 + 0.5, h); ctx.lineTo(x0 + 0.5, y); ctx.moveTo(x1 - 0.5, h); ctx.lineTo(x1 - 0.5, y); ctx.stroke();
+      ctx.fillText(String(s), x1 + 12, y + 3);
+    });
+  };
+  img.src = url;
 }
 
 let pending = 0;
@@ -198,80 +288,99 @@ function schedule() {
 }
 
 // ── Export ───────────────────────────────────────────────────────────────
-// Dithers ship at their dot grid (1 mask px per dot) and scale up with
-// pixelated sampling; continuous algorithms ship at 2× for sharp lines.
-function exportSpec() {
-  const grid = ALGOS[S.algo].grid, k = grid ? 1 : 2;
-  return { grid, k, W: S.exportW * k, H: S.plateH * k };
+const exported = { wide: null, narrow: null };
+const signature = (which) => JSON.stringify([sourceId(), S.plates[which], S.algo, S.sizes[S.algo], S.field, S.hatch, S.angle, S.kernel, S.inkLight, S.lift, S.fade, S.contrast, S.gamma, S.bits, S.format, S.ink]);
+
+function plateDims(which) {
+  const a = ALGOS[S.algo], p = S.plates[which], s = a.exportScale, size = S.sizes[S.algo];
+  const W = Math.round(p.width * s), H = Math.round(p.height * s);
+  if (a.grid) { const cell = Math.max(1, Math.round(size * s)), cw = Math.ceil(W / cell), ch = Math.ceil(H / cell); return { cw, ch, cssW: (cw * cell) / s, cssH: (ch * cell) / s }; }
+  return { cw: W, ch: H, cssW: W / s, cssH: H / s };
 }
 
-function snippetText(e) {
-  const name = "plate.png";
-  const cssW = e ? (e.cw * e.cell) / e.k : S.exportW, cssH = e ? (e.ch * e.cell) / e.k : S.plateH;
-  const head = e ? `/* ${name}: ${e.cw}×${e.ch}, ${1 << e.bits} levels, ${kb(e.bytes)} */` : `/* ${name}: export to see dimensions and size */`;
-  return `${head}
-.site-footer { position: relative; isolation: isolate; }
+function snippetText() {
+  const n = S.plates.narrow, w = S.plates.wide, dn = plateDims("narrow"), dw = plateDims("wide");
+  const ext = S.format === "webp" ? "webp" : "png";
+  const note = (which, d) => {
+    const e = exported[which];
+    return e && e.sig === signature(which) ? `${e.filename}: ${d.cw}×${d.ch}, ${kb(e.bytes)}` : `plate-${which}.${ext}: ${d.cw}×${d.ch}, export to measure`;
+  };
+  const pad = (p) => Math.round(p.height * (1 - p.overlap));
+  const pix = ALGOS[S.algo].grid ? "\n  image-rendering: pixelated; /* keep dither dots square */" : "";
+  return `/* Horizon plate, mobile first. Browsers fetch only the mask that applies.
+   Masks load in CORS mode: serve them same-origin (or with CORS headers), not from file://.
+   ${note("narrow", dn)}
+   ${note("wide", dw)} */
+.site-footer {
+  position: relative; isolation: isolate; overflow: clip;
+  min-height: ${dn.cssH}px; padding-bottom: ${pad(n)}px; /* text over sky: ${Math.round(n.overlap * 100)}% */
+  content-visibility: auto; contain-intrinsic-size: auto ${Math.round(n.height + 240)}px;
+}
 .site-footer::before {
-  content: ""; position: absolute; inset: auto 0 0; z-index: -1;
-  height: ${Math.round(cssH)}px; pointer-events: none;
-  background: ${S.ink}; /* or var(--ink): the PNG holds no colour you need */
-  -webkit-mask: url(${name}) 50% 100% / ${Math.round(cssW)}px ${Math.round(cssH)}px no-repeat;
-          mask: url(${name}) 50% 100% / ${Math.round(cssW)}px ${Math.round(cssH)}px no-repeat;${ALGOS[S.algo].grid ? "\n  image-rendering: pixelated; /* keep dither dots square */" : ""}
+  content: ""; position: absolute; left: 50%; bottom: 0; z-index: -1;
+  width: ${dn.cssW}px; height: ${dn.cssH}px; transform: translateX(-50%);
+  background: ${S.ink}; /* or var(--ink): colour comes from CSS */
+  -webkit-mask: url(plate-narrow.${ext}) 0 0 / 100% 100% no-repeat;
+          mask: url(plate-narrow.${ext}) 0 0 / 100% 100% no-repeat;${pix}
+  pointer-events: none;
 }
-.site-footer { content-visibility: auto; contain-intrinsic-size: auto ${Math.round(cssH + 200)}px; }`;
+@media (min-width: ${n.width}px) {
+  .site-footer { min-height: ${dw.cssH}px; padding-bottom: ${pad(w)}px; contain-intrinsic-size: auto ${Math.round(w.height + 240)}px; }
+  .site-footer::before {
+    width: ${dw.cssW}px; height: ${dw.cssH}px;
+    -webkit-mask-image: url(plate-wide.${ext});
+            mask-image: url(plate-wide.${ext});
+  }
+}`;
 }
-let lastExport = null;
+
 function updateSnippet() {
-  const e = exportSpec();
-  const fresh = lastExport && lastExport.sig === signature() ? lastExport : null;
-  $("snippet").textContent = snippetText(fresh);
-  $("exportNote").textContent = e.grid
-    ? `Ships ${Math.ceil(S.exportW / S.sizes[S.algo])}×${Math.ceil(S.plateH / S.sizes[S.algo])}: one pixel per dot, centred and cropped on narrower screens.`
-    : `Ships ${e.W}×${e.H} at 2× for sharp lines on high-density screens, centred and cropped on narrower screens.`;
+  $("snippet").textContent = snippetText();
+  const a = ALGOS[S.algo], d = plateDims(S.plate);
+  $("exportNote").textContent = `This plate ships ${d.cw}×${d.ch} (${a.grid ? "one pixel per dot" : a.exportScale === 2 ? "2× for sharp lines" : "½× of CSS size"}). The narrow plate is used below ${S.plates.narrow.width} px; the wide one from there up.`;
 }
-const signature = () => JSON.stringify([sourceId(), S.anchor, S.algo, S.sizes[S.algo], S.field, S.hatch, S.angle, S.kernel, S.inkLight, S.lift, S.fade, S.contrast, S.gamma, S.plateH, S.bits, S.exportW, S.ink]);
 
 const downloadsReady = window.claude?.use ? window.claude.use("downloads").catch(() => null) : Promise.resolve(undefined);
 
-async function exportPNG() {
-  const btn = $("download");
+async function exportPlate() {
+  const btn = $("download"), which = S.plate;
   btn.disabled = true;
   btn.textContent = "Rendering…";
   await new Promise((r) => setTimeout(r, 30));
   try {
-    const e = exportSpec();
-    const r = compute(e.W, e.H, e.k, false);
-    const png = await encodePNG(quantize(r.cov, r.bits), r.cw, r.ch, r.bits, hexRgb(S.ink));
-    lastExport = { ...r, k: e.k, bytes: png.length, sig: signature() };
+    const src = await sourceImage();
+    const r = compute(src, S.plates[which], ALGOS[S.algo].exportScale, false);
+    const enc = await encode(r);
+    const filename = `plate-${which}.${enc.ext}`;
+    exported[which] = { filename, bytes: enc.blob.size, sig: signature(which) };
     updateSnippet();
-    const filename = `plate-${S.algo}-${r.cw}x${r.ch}.png`;
     const dl = await downloadsReady;
+    const done = `Saved ${filename}: ${r.cw}×${r.ch}, ${kb(enc.blob.size)}.`;
     if (dl === undefined) {
       // Opened from disk or a plain web server: an ordinary download link.
       const a = document.createElement("a");
-      a.href = URL.createObjectURL(new Blob([png], { type: "image/png" }));
+      a.href = URL.createObjectURL(enc.blob);
       a.download = filename;
       a.click();
       setTimeout(() => URL.revokeObjectURL(a.href), 1000);
-      $("exportNote").textContent = `Saved ${filename} (${kb(png.length)}).`;
+      $("exportNote").textContent = done;
     } else if (dl) {
-      await dl.save({ filename, data: new Blob([png]) });
-      $("exportNote").textContent = `Saved ${filename} (${kb(png.length)}).`;
+      await dl.save({ filename, data: enc.blob });
+      $("exportNote").textContent = done;
     } else {
-      $("exportNote").textContent = `Rendered ${r.cw}×${r.ch}, ${kb(png.length)}. Saving files is not available in this view; open the lab from the artifacts repository to download.`;
+      $("exportNote").textContent = `Rendered ${filename} (${kb(enc.blob.size)}). Saving files is not available in this view; open the lab from the artifacts repository to download.`;
     }
   } catch (err) {
     $("exportNote").textContent = err?.code === "declined" ? "Export cancelled." : `Export failed: ${err?.message || err}`;
   } finally {
     btn.disabled = false;
-    btn.textContent = "Export PNG";
+    btn.textContent = "Export this plate";
   }
 }
 
 async function copyCSS() {
-  const text = $("snippet").textContent;
   try {
-    await navigator.clipboard.writeText(text);
+    await navigator.clipboard.writeText($("snippet").textContent);
     $("copy").textContent = "Copied";
   } catch {
     const range = document.createRange();
@@ -284,6 +393,7 @@ async function copyCSS() {
 }
 
 // ── Controls ─────────────────────────────────────────────────────────────
+const segs = [], ranges = [];
 function seg(id, options, get, set) {
   const el = $(id);
   el.innerHTML = "";
@@ -296,49 +406,52 @@ function seg(id, options, get, set) {
     el.append(b);
   }
   el.sync = () => el.querySelectorAll("button").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.key === String(get()))));
+  segs.push(id);
 }
-
 function range(id, get, set, show) {
   const el = $(id), out = $(id + "Out");
-  el.addEventListener("input", () => { set(+el.value); out.textContent = show(+el.value); schedule(); });
+  el.addEventListener("input", () => { set(+el.value); out.textContent = show(+el.value); paintSite(); schedule(); });
   el.sync = () => { el.value = get(); out.textContent = show(get()); };
+  ranges.push(id);
 }
-
 const pct = (v) => `${Math.round(v * 100)}%`;
-const segs = [];
-const ranges = [];
 
-function applyTheme(key, { keepSource = false } = {}) {
+function applyTheme(key) {
   const th = THEMES[key];
   S.theme = key;
   S.bg = th.bg; S.ink = th.ink;
   Object.assign(S, { algo: th.algo, inkLight: th.inkLight, lift: th.lift, fade: th.fade, contrast: th.contrast, gamma: th.gamma });
-  S.sizes[th.algo] = th.size;
+  if (th.size) S.sizes[th.algo] = th.size;
   for (const k of ["field", "hatch", "angle", "kernel"]) if (k in th) S[k] = th[k];
-  if (!keepSource && S.source.kind === "scene") S.source = { kind: "scene", key: th.scene };
-  paintSite();
+  S.plates = structuredClone(PLATE_DEFAULTS);
+  Object.assign(S.plates.wide, th.wide);
+  if (S.source.kind === "photo") usePhoto(th.photo);
 }
 
 function paintSite() {
-  const th = THEMES[S.theme], site = $("site");
+  const th = THEMES[S.theme], site = $("site"), p = P();
   site.style.setProperty("--p-bg", S.bg);
   site.style.setProperty("--p-ink", S.ink);
   site.style.setProperty("--p-text", th.text);
   site.style.setProperty("--p-muted", th.muted);
   site.style.setProperty("--p-rule", th.rule);
   site.style.setProperty("--p-font", th.font);
-  site.style.setProperty("--plate-h", S.plateH + "px");
-  site.style.setProperty("--overlap", S.overlap);
+  site.style.setProperty("--plate-h", p.height + "px");
+  site.style.setProperty("--overlap", p.overlap);
+  site.dataset.screen = S.plate;
 }
 
 function sync() {
   segs.forEach((s) => $(s).sync());
   ranges.forEach((r) => $(r).sync());
   const a = ALGOS[S.algo], size = $("size");
-  size.min = a.size[0]; size.max = a.size[1]; size.step = a.size[2];
-  size.value = S.sizes[S.algo];
-  $("sizeLabel").textContent = a.sizeLabel;
-  $("sizeOut").textContent = `${S.sizes[S.algo]} px`;
+  $("sizeRow").hidden = !a.size;
+  if (a.size) {
+    size.min = a.size[0]; size.max = a.size[1]; size.step = a.size[2];
+    size.value = S.sizes[S.algo];
+    $("sizeLabel").textContent = a.sizeLabel;
+    $("sizeOut").textContent = `${S.sizes[S.algo]} px`;
+  }
   $("algoNote").textContent = a.note;
   document.querySelectorAll(".sub").forEach((el) => (el.hidden = el.dataset.for !== S.algo));
   $("hatch").checked = S.hatch;
@@ -346,29 +459,38 @@ function sync() {
   $("bg").value = S.bg;
   $("ink").value = S.ink;
   $("bits").value = S.bits;
-  $("exportW").value = S.exportW;
+  $("format").value = S.format;
+  const wsel = $("plateW");
+  wsel.innerHTML = "";
+  for (const v of S.plate === "wide" ? [1600, 2400, 3200] : [600, 820, 1024]) wsel.add(new Option(`${v} px`, v));
+  wsel.value = P().width;
+  $("screenNote").textContent = S.plate === "wide"
+    ? `Shown on screens ${S.plates.narrow.width} px and wider. The stage shows the centre; the strip below shows the whole plate.`
+    : `Shown below ${S.plates.narrow.width} px. The stage is framed at phone width, 390 px.`;
   paintSite();
 }
 
 function initControls() {
-  seg("scenes", [...Object.entries(SCENES).map(([k, s]) => [k, s.label.split(",")[0]])],
-    () => (S.source.kind === "scene" ? S.source.key : ""), (k) => { S.source = { kind: "scene", key: k }; $("dropText").innerHTML = "<b>Drop, paste, or choose an image.</b> It stays in this browser."; });
+  seg("photos", Object.entries(PHOTOS).map(([k, p]) => [k, p.label]),
+    () => (S.source.kind === "photo" ? S.source.key : ""),
+    (k) => { usePhoto(k); $("dropText").innerHTML = "<b>Drop, paste, or choose an image.</b> It stays in this browser."; });
   seg("algos", Object.entries(ALGOS).map(([k, a]) => [k, a.label]), () => S.algo, (k) => (S.algo = k));
   seg("fields", [["flat", "Flat"], ["wave", "Guilloché"], ["relief", "Relief"]], () => S.field, (k) => (S.field = k));
   seg("kernels", [["atkinson", "Atkinson"], ["fs", "Floyd–Steinberg"]], () => S.kernel, (k) => (S.kernel = k));
   seg("polarity", [["false", "Ink the shadows"], ["true", "Ink the light"]], () => S.inkLight, (k) => (S.inkLight = k === "true"));
-  seg("views", [["plate", "Plate"], ["tone", "Ink map"], ["source", "Source"]], () => S.view, (k) => (S.view = k));
-  segs.push("scenes", "algos", "fields", "kernels", "polarity", "views");
+  seg("plates", [["wide", "Wide plate"], ["narrow", "Narrow plate"]], () => S.plate, (k) => (S.plate = k));
+  seg("views", [["plate", "Plate"], ["source", "Source crop"]], () => S.view, (k) => (S.view = k));
 
-  range("anchor", () => S.anchor, (v) => (S.anchor = v), pct);
   range("angle", () => S.angle, (v) => (S.angle = v), (v) => `${v}°`);
   range("lift", () => S.lift, (v) => (S.lift = v), pct);
   range("fade", () => S.fade, (v) => (S.fade = v), pct);
   range("contrast", () => S.contrast, (v) => (S.contrast = v), (v) => v.toFixed(2));
   range("gamma", () => S.gamma, (v) => (S.gamma = v), (v) => v.toFixed(2));
-  range("plateH", () => S.plateH, (v) => { S.plateH = v; paintSite(); }, (v) => `${v} px`);
-  range("overlap", () => S.overlap, (v) => { S.overlap = v; paintSite(); }, pct);
-  ranges.push("anchor", "angle", "lift", "fade", "contrast", "gamma", "plateH", "overlap");
+  range("plateH", () => P().height, (v) => (P().height = v), (v) => `${v} px`);
+  range("overlap", () => P().overlap, (v) => (P().overlap = v), pct);
+  range("ax", () => P().ax, (v) => (P().ax = v), pct);
+  range("ay", () => P().ay, (v) => (P().ay = v), pct);
+  range("zoom", () => P().zoom, (v) => (P().zoom = v), (v) => `${v.toFixed(2)}×`);
 
   $("size").addEventListener("input", (e) => { S.sizes[S.algo] = +e.target.value; $("sizeOut").textContent = `${S.sizes[S.algo]} px`; schedule(); });
   $("hatch").addEventListener("change", (e) => { S.hatch = e.target.checked; schedule(); });
@@ -376,11 +498,12 @@ function initControls() {
   for (const [k, th] of Object.entries(THEMES)) themeSel.add(new Option(th.label, k));
   themeSel.addEventListener("change", () => { applyTheme(themeSel.value); sync(); schedule(); });
   $("bg").addEventListener("input", (e) => { S.bg = e.target.value; paintSite(); });
-  $("ink").addEventListener("input", (e) => { S.ink = e.target.value; paintSite(); if (S.view === "tone") schedule(); });
-  $("ink").addEventListener("change", () => schedule()); // palette in the PNG follows the ink
+  $("ink").addEventListener("input", (e) => { S.ink = e.target.value; paintSite(); });
+  $("ink").addEventListener("change", () => schedule()); // the PNG palette follows the ink
   $("bits").addEventListener("change", (e) => { S.bits = e.target.value; schedule(); });
-  $("exportW").addEventListener("change", (e) => { S.exportW = +e.target.value; updateSnippet(); });
-  $("download").addEventListener("click", exportPNG);
+  $("format").addEventListener("change", (e) => { S.format = e.target.value; schedule(); });
+  $("plateW").addEventListener("change", (e) => { P().width = +e.target.value; sync(); schedule(); });
+  $("download").addEventListener("click", exportPlate);
   $("copy").addEventListener("click", copyCSS);
 
   // Image input: file picker, drag and drop anywhere on the bench, paste.
@@ -390,7 +513,10 @@ function initControls() {
     img.decoding = "async";
     img.onload = () => {
       S.source = { kind: "file", name: `${file.name}:${file.size}:${file.lastModified}`, img };
-      $("dropText").innerHTML = `<b>${file.name.replace(/[<&>]/g, "")}</b> · ${img.naturalWidth}×${img.naturalHeight}. Choose a scene to switch back.`;
+      $("dropText").textContent = "";
+      const b = document.createElement("b");
+      b.textContent = file.name;
+      $("dropText").append(b, ` · ${img.naturalWidth}×${img.naturalHeight}. Choose a photo to switch back.`);
       sync(); schedule();
     };
     img.onerror = () => ($("dropText").innerHTML = "<b>That file could not be read as an image.</b> Try a JPEG, PNG, or WebP.");
@@ -407,13 +533,25 @@ function initControls() {
     const item = [...(e.clipboardData?.items || [])].find((i) => i.type.startsWith("image/"));
     if (item) load(item.getAsFile());
   });
+  // The overview strip follows the stage width.
+  let lastW = 0;
+  new ResizeObserver(([e]) => { const w = Math.round(e.contentRect.width); if (w !== lastW) { lastW = w; schedule(); } }).observe($("overview"));
+}
 
-  // Width or height changes re-render at the new device-pixel size.
-  new ResizeObserver(() => schedule()).observe(plate);
+function renderCredits() {
+  const list = $("credits");
+  for (const p of Object.values(PHOTOS)) {
+    const li = document.createElement("li");
+    li.innerHTML = `<b></b><span></span>`;
+    li.querySelector("b").textContent = p.title;
+    li.querySelector("span").textContent = ` · ${p.where}. ${p.camera}.`;
+    list.append(li);
+  }
 }
 
 applyTheme(S.theme);
 initControls();
+renderCredits();
 sync();
-$("readout").textContent = "Rendering the sample scene…";
-setTimeout(schedule, 30);
+$("readout").textContent = "Loading the sample photo…";
+schedule();

@@ -1,7 +1,8 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { inflateSync } from "node:zlib";
-import { crc32, encodePNG, packRows, quantize, tone, downsample, engrave, halftone, bayer, diffuse, mezzotint, renderScene, BAYER8 } from "./mechanics.mjs";
+import { inflateSync, deflateSync } from "node:zlib";
+const require_deflate = (b) => deflateSync(Buffer.from(b)).length;
+import { crc32, encodePNG, packRows, filterRows, quantize, tone, downsample, engrave, halftone, bayer, diffuse, mezzotint, BAYER8 } from "./mechanics.mjs";
 
 const mean = (a, scale = 1) => a.reduce((s, v) => s + v, 0) / a.length / scale;
 
@@ -19,6 +20,22 @@ function readPNG(png) {
   return { chunks, raw: inflateSync(Buffer.concat(idat)) };
 }
 
+// Reverse PNG filters (spec §9.2) with bpp = 1, as a decoder would.
+function unfilter(raw, rowBytes, h) {
+  const out = Buffer.from(raw), stride = rowBytes + 1;
+  for (let y = 0; y < h; y++) {
+    const o = y * stride + 1, up = o - stride, f = out[o - 1];
+    for (let i = 0; i < rowBytes; i++) {
+      const a = i ? out[o + i - 1] : 0, b = y ? out[up + i] : 0, c = y && i ? out[up + i - 1] : 0;
+      const p = a + b - c, pa = Math.abs(p - a), pb = Math.abs(p - b), pc = Math.abs(p - c);
+      const pred = [0, a, b, (a + b) >> 1, pa <= pb && pa <= pc ? a : pb <= pc ? b : c][f];
+      out[o + i] = (out[o + i] + pred) & 255;
+    }
+    out[o - 1] = 0;
+  }
+  return out;
+}
+
 test("crc32 matches the PNG IEND constant", () => {
   assert.equal(crc32(new TextEncoder().encode("IEND")), 0xae426082);
 });
@@ -28,7 +45,8 @@ test("indexed PNG round-trips every bit depth with odd widths", async () => {
     const w = 13, h = 5, max = (1 << bits) - 1;
     const idx = Uint8Array.from({ length: w * h }, (_, i) => (i * 7) % (max + 1));
     const png = await encodePNG(idx, w, h, bits, [39, 71, 196]);
-    const { chunks, raw } = readPNG(png);
+    const { chunks, raw: filtered } = readPNG(png);
+    const raw = unfilter(filtered, Math.ceil((w * bits) / 8), h);
     const ih = new DataView(chunks.IHDR.buffer, chunks.IHDR.byteOffset);
     assert.deepEqual([ih.getUint32(0), ih.getUint32(4), chunks.IHDR[8], chunks.IHDR[9]], [w, h, bits, 3]);
     assert.equal(chunks.PLTE.length, (max + 1) * 3);
@@ -46,6 +64,14 @@ test("indexed PNG round-trips every bit depth with odd widths", async () => {
       }
     }
   }
+});
+
+test("adaptive row filters invert exactly and shrink a smooth gradient", () => {
+  const w = 64, h = 16, idx = Uint8Array.from({ length: w * h }, (_, i) => (i % w) * 4 + ((i / w) | 0));
+  const packed = packRows(idx, w, h, 8), filtered = filterRows(packed, w, h);
+  assert.deepEqual(unfilter(filtered, w, h), Buffer.from(packed));
+  const size = (b) => require_deflate(b);
+  assert.ok(size(filtered) < size(packed), "filtering helps gradients");
 });
 
 test("tone: the ink floor leaves the sky empty and the dissolve clears the top row", () => {
@@ -85,13 +111,4 @@ test("downsample averages rectangular cells and quantize maps to level indices",
   const { g, gw, gh } = downsample(t, 4, 4, 2, 4);
   assert.deepEqual([gw, gh, ...g], [2, 1, 1, 0]);
   assert.deepEqual([...quantize(Uint8Array.from([0, 85, 170, 255]), 2)], [0, 1, 2, 3]);
-});
-
-test("scenes render in range with a sky lighter or darker than the ground by design", () => {
-  for (const key of ["dunes", "hills", "range"]) {
-    const w = 160, h = 80, l = renderScene(key, w, h);
-    assert.ok(l.every((v) => v >= 0 && v <= 1));
-    const sky = mean(l.subarray(0, w * 10)), ground = mean(l.subarray(w * 75));
-    assert.ok(Math.abs(sky - ground) > 0.15, `${key}: sky ${sky.toFixed(2)} vs ground ${ground.toFixed(2)}`);
-  }
 });
