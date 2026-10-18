@@ -158,6 +158,15 @@
     <li><b>Ink with CSS.</b> The page paints <code>background: var(--ink)</code> through <code>mask-image</code>. Changing the theme recolours the plate without re-rendering it. Dithers are scaled up with <code>image-rendering: pixelated</code>, so a 1-bit file at a quarter of the pixels stays sharp.</li>
   </ol>
   <div class="rules">
+    <h3>Putting a footer on a site</h3>
+    <ol class="pipeline">
+      <li><b>Tune.</b> Drop in your image and start from the theme closest to the site. Tune <b>Wide</b>, switch to <b>Narrow</b> and tune it too (one recipe holds both), and check the Image tab for what each screen width shows. Add a <b>Credit</b> if the image needs one.</li>
+      <li><b>Copy recipe.</b> It is every setting as JSON. Keep it next to the plates on the site (<code>recipe.json</code>): pasted back onto this page, it restores the lab exactly, so later tweaks start where you left off.</li>
+      <li><b>Render.</b> Either <b>Export PNG</b> for each plate, or hand the recipe and the source image to <code>node horizon-plate/render.mjs image recipe.json out/ --dark</code>, which renders the same files headless (and, with <code>--dark</code>, a flipped pair for a dark theme). Chat re-encodes images, so give an agent the recipe and the source, never exported PNGs.</li>
+      <li><b>Wire up.</b> <b>Copy CSS</b> gives the footer rules: sizes, position, and one media query, so each visitor fetches one mask. Use the site's own colour variable for the ink, and add a <code>prefers-color-scheme: dark</code> rule for the dark pair.</li>
+    </ol>
+  </div>
+  <div class="rules">
     <h3>Rules that keep it fast</h3>
     <ul>
       <li>Render once, offline or in this lab. The shipped page runs no script for the plate.</li>

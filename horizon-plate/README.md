@@ -13,10 +13,24 @@ node --test horizon-plate/mechanics.test.mjs
 
 Start from a sample photo or drop, paste, or choose your own; it is processed in the browser and never uploaded. Tabs switch between **Footer** (the shipped geometry), **Image** (the whole plate, the slice each screen width shows, and the source photo with the plate's frame), and **Notes**; Hide controls gives the preview the full width. Tune a **wide** and a **narrow** plate (each with its own width, height, text overlap, position, and zoom). Position works like CSS `object-position`: the photo's point at X% sits X% across every screen. Zoom below 1× fits a portrait or narrow photo inside the plate, with **Dissolve sides** fading its edges into the page. **Export PNG** saves `plate-wide.png` or `plate-narrow.png` exactly as previewed; **Copy CSS** gives the mobile-first footer rule that loads one or the other. **Copy recipe** copies every setting as JSON; paste it on the page to restore them, or hand it to a build with the source photo to re-render the same plates (text survives chat and commits; a 1-bit PNG pasted into chat does not).
 
+## Ship to a site
+
+1. Tune both plates in the lab, then **Copy recipe** and keep it next to the plates on the site as `recipe.json`.
+2. Render, by hand with **Export PNG**, or headless from the recipe and the source image:
+
+   ```sh
+   node horizon-plate/build.mjs
+   node horizon-plate/render.mjs <image> <recipe.json> <out-dir> --dark
+   ```
+
+   That writes `plate-wide.png` and `plate-narrow.png`; `--dark` adds a `-dark` pair with the polarity flipped, so a dark theme reads as a print rather than a negative. Needs Playwright with Chromium (cloud sessions have it). Images sent through chat are re-encoded, so hand an agent the recipe and source, not exported PNGs.
+3. Wire the footer from **Copy CSS**. Live example: pinecoder.dev posts (`cloverich/blog2`, `static/footer/` and `.site-footer` in `static/new.css`).
+
 ## Source
 
 - `mechanics.mjs`: DOM-free pipeline (tone, four mark algorithms, quantize with optional dither, indexed PNG encoder with row filters). Runs unchanged in Node, so the same code can render plates at build time.
 - `photos/`: the three sample photographs (Git LFS), inlined into the build as data URIs.
+- `render.mjs`: headless renderer for a recipe and source image (the lab's own pipeline).
 - `app.js`: lab UI, theme presets, tabbed preview (canvas in the ink colour; the PNG is encoded only once controls go still), export.
 - `index.html`, `style.css`: page and styles. `build.mjs` inlines everything, the photos, and `analysis.md`, and also writes `dist/artifact.html`, a head-less fragment for publishing as a Claude artifact.
 - `analysis.md`: the study: what the references do, the pipeline, performance rules, alternatives, measured file sizes, and open questions.
