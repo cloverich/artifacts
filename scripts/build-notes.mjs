@@ -4,6 +4,7 @@ import { fileURLToPath } from 'node:url';
 import { escapeHtml, renderMarkdown } from './markdown.mjs';
 
 export const studies = [
+  { slug: 'iso-glow', source: 'iso-glow-lab/analysis.md', experiment: 'iso-glow-lab/dist/iso-glow.html' },
   { slug: 'horizon-plate', source: 'horizon-plate/analysis.md', experiment: 'horizon-plate/dist/horizon-plate.html' },
   { slug: 'steward', source: 'steward-dashboard/analysis.md', experiment: 'steward-dashboard/dist/steward.html' },
   { slug: 'soundscape', source: 'soundscape/analysis.md', experiment: 'soundscape/dist/soundscape.html' },

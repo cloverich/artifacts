@@ -1,0 +1,276 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Iso-Glow Lab · 3D Technical Line &amp; Outline Pipeline Study</title>
+  <meta name="description" content="Interactive 3D study of isoglow.dev's technical line architecture, hysteresis crease extraction, inverted-hull silhouettes, and G-buffer Sobel post-processing.">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header class="topbar">
+    <div class="topbar-in">
+      <div class="brand">
+        <span class="brand-dot" aria-hidden="true"></span>
+        <span>ISO-GLOW LAB</span>
+        <em>· C-07 3D Pipeline Study</em>
+      </div>
+
+      <div class="view-tabs" role="tablist" aria-label="Study views">
+        <button type="button" role="tab" id="tab-btn-workbench" aria-controls="panel-workbench" aria-selected="true" data-tab="workbench">01 · 3D Outline &amp; Glow Lab</button>
+        <button type="button" role="tab" id="tab-btn-kernel" aria-controls="panel-kernel" aria-selected="false" data-tab="kernel">02 · 2D SVG ↔ 3D Kernel</button>
+        <button type="button" role="tab" id="tab-btn-study" aria-controls="panel-study" aria-selected="false" data-tab="study">03 · Study &amp; Conflicts</button>
+      </div>
+
+      <div class="top-actions">
+        <div class="swatches" id="swatches" role="radiogroup" aria-label="Glow accent color"></div>
+        <button type="button" class="icon-btn" id="btn-ortho" aria-pressed="true" title="Toggle true orthographic isometric vs 28° perspective (I)">Iso Ortho</button>
+        <button type="button" class="icon-btn" id="btn-theme" title="Switch dark or light polarity (T)">◐ Theme</button>
+      </div>
+    </div>
+  </header>
+
+  <main class="workspace">
+    <!-- TAB 1: 3D WORKBENCH -->
+    <section class="tab-panel" id="panel-workbench" role="tabpanel" aria-labelledby="tab-btn-workbench">
+      <div class="workbench-grid">
+        <div class="stage-card">
+          <div class="stage-toolbar">
+            <div class="seg-group" role="group" aria-label="Outline pipeline">
+              <button type="button" class="seg-btn active" data-pipeline="isoglow">Iso-Glow (Hysteresis + Hull)</button>
+              <button type="button" class="seg-btn" data-pipeline="naive">Naive EdgesGeometry</button>
+              <button type="button" class="seg-btn" data-pipeline="sobel">Sobel G-Buffer (Depth+N+ID)</button>
+              <button type="button" class="seg-btn" data-pipeline="split">Split Wipe (Iso-Glow | Sobel)</button>
+            </div>
+            <div class="seg-group" role="group" aria-label="Inspection view">
+              <button type="button" class="seg-btn active" data-view="composite">Composite</button>
+              <button type="button" class="seg-btn" data-view="xray">Edge Tier X-Ray</button>
+              <button type="button" class="seg-btn" data-view="gbuffer">4-Up G-Buffer</button>
+            </div>
+          </div>
+
+          <div class="stage-wrap" id="stage-wrap">
+            <canvas id="stage-canvas" width="960" height="600" aria-label="Interactive 3D C-07 Stereo Cassette Deck"></canvas>
+            <div class="hud-top-left">
+              <div class="hud-pill" id="hud-status">
+                <strong id="hud-pipeline-name">Iso-Glow Object-Space</strong>
+                <span id="hud-part-hover">Drag to orbit · Scroll to zoom · Click transport keys or press Space</span>
+              </div>
+              <div class="hud-pill legend-row" id="hud-legend"></div>
+            </div>
+          </div>
+
+          <div class="transport-bar">
+            <div class="transport-keys" role="group" aria-label="Cassette deck transport">
+              <button type="button" class="tkey-btn" data-tkey="rew"><span>◀◀ REW</span><kbd>←</kbd></button>
+              <button type="button" class="tkey-btn" data-tkey="play"><span>▶ PLAY</span><kbd>Space</kbd></button>
+              <button type="button" class="tkey-btn" data-tkey="ff"><span>▶▶ FF</span><kbd>→</kbd></button>
+              <button type="button" class="tkey-btn" data-tkey="stop"><span>■ STOP</span><kbd>S</kbd></button>
+              <button type="button" class="tkey-btn" data-tkey="rec"><span>● REC</span><kbd>R</kbd></button>
+              <button type="button" class="tkey-btn" id="btn-audio-mute" aria-pressed="false" title="Mute or unmute Web Audio synthesizer"><span>🔊 Synth</span></button>
+            </div>
+            <div class="readout-box" id="transport-readout" aria-live="polite">STOP · 160 · L▯▯▯▯▯▯ R▯▯▯▯▯▯</div>
+          </div>
+
+          <div class="telemetry-grid">
+            <div class="metric-cell">
+              <span class="metric-label">Object-Space Creases</span>
+              <span class="metric-val" id="metric-creases">—</span>
+              <span class="metric-sub" id="metric-creases-sub">Minor / Major / Rescued</span>
+            </div>
+            <div class="metric-cell">
+              <span class="metric-label">Sobel G-Buffer Pixels</span>
+              <span class="metric-val" id="metric-sobel">—</span>
+              <span class="metric-sub" id="metric-sobel-sub">Depth / Normal / Object-ID</span>
+            </div>
+            <div class="metric-cell">
+              <span class="metric-label">Grazing &amp; Seam Health</span>
+              <span class="metric-val" id="metric-health">—</span>
+              <span class="metric-sub" id="metric-health-sub">False grazing / Coplanar seams</span>
+            </div>
+            <div class="metric-cell">
+              <span class="metric-label">Camera &amp; Line Weight</span>
+              <span class="metric-val" id="metric-camera">—</span>
+              <span class="metric-sub" id="metric-camera-sub">PPM &amp; zoom contrast fade</span>
+            </div>
+          </div>
+        </div>
+
+        <aside class="controls-col" aria-label="Pipeline controls">
+          <div class="ctrl-card">
+            <h2><span>1. Diagnostic Presets</span><span>Quick Compare</span></h2>
+            <p class="ctrl-desc">Jump directly to the geometric and screen-space failure modes analyzed in the study.</p>
+            <div class="preset-row">
+              <button type="button" class="preset-btn" data-preset="default">Iso Default (35.3°)</button>
+              <button type="button" class="preset-btn" data-preset="grazing">Grazing Stress (11°)</button>
+              <button type="button" class="preset-btn" data-preset="coplanar">Flush Coplanar Keys</button>
+              <button type="button" class="preset-btn" data-preset="cutaway">Anatomy Cutaway</button>
+            </div>
+          </div>
+
+          <div class="ctrl-card">
+            <h2><span>2. Object-Space Crease &amp; Hull</span><span>O(E)</span></h2>
+            <div class="slider-row">
+              <div class="slider-head">
+                <label for="rng-edge-angle">Crease threshold θ</label>
+                <output id="out-edge-angle">30°</output>
+              </div>
+              <input id="rng-edge-angle" type="range" min="10" max="70" step="1" value="30">
+            </div>
+            <div class="slider-row" id="row-split-pos" hidden>
+              <div class="slider-head">
+                <label for="rng-split">Split-screen wipe position</label>
+                <output id="out-split">50%</output>
+              </div>
+              <input id="rng-split" type="range" min="10" max="90" step="1" value="50">
+            </div>
+            <div class="toggle-list">
+              <label class="check-row">
+                <input type="checkbox" id="chk-hysteresis" checked>
+                <span>Hysteresis follower &amp; fragment pruning<small>Grow creases ≥ 0.55θ when dot &gt; 0.9; drop chains &lt; 6 cm (`creaseLines`).</small></span>
+              </label>
+              <label class="check-row">
+                <input type="checkbox" id="chk-hull" checked>
+                <span>Inverted-hull curved silhouettes<small>Backface shell (`outlineMat`) outlines smooth cylinders &amp; rounded corner fillets.</small></span>
+              </label>
+            </div>
+          </div>
+
+          <div class="ctrl-card">
+            <h2><span>3. Image-Space Sobel G-Buffer</span><span>O(W×H)</span></h2>
+            <div class="slider-row">
+              <div class="slider-head">
+                <label for="rng-grazing-k">Grazing modulation factor k</label>
+                <output id="out-grazing-k">4.5</output>
+              </div>
+              <input id="rng-grazing-k" type="range" min="0" max="8" step="0.5" value="4.5">
+            </div>
+            <div class="toggle-list">
+              <label class="check-row">
+                <input type="checkbox" id="chk-grazing" checked>
+                <span>View-normal depth modulation T_depth(N)<small>Scales depth threshold by 1 + k(1 − N_z) so shallow grazing angles don't fill flat decks with ink.</small></span>
+              </label>
+              <label class="check-row">
+                <input type="checkbox" id="chk-object-id" checked>
+                <span>Object-ID G-buffer seam channel<small>Detects flush coplanar part boundaries (recessed keys, bezels) where Δz = 0 and ΔN = 0.</small></span>
+              </label>
+              <label class="check-row">
+                <input type="checkbox" id="chk-flush-keys">
+                <span>Force flush coplanar transport keys<small>Sets key height to 0.15 mm so keys lie coplanar with the deck to test Object-ID recall.</small></span>
+              </label>
+            </div>
+          </div>
+
+          <div class="ctrl-card">
+            <h2><span>4. Glow, Dither &amp; Anatomy</span><span>Halos</span></h2>
+            <div class="slider-row">
+              <div class="slider-head">
+                <label for="rng-explode">Assembly explode</label>
+                <output id="out-explode">0%</output>
+              </div>
+              <input id="rng-explode" type="range" min="0" max="100" step="1" value="0">
+            </div>
+            <div class="slider-row">
+              <div class="slider-head">
+                <label for="rng-section">Section cutaway plane</label>
+                <output id="out-section">100%</output>
+              </div>
+              <input id="rng-section" type="range" min="25" max="100" step="1" value="100">
+            </div>
+            <div class="slider-row">
+              <div class="slider-head">
+                <label for="sel-glow-mode">Selective glow &amp; anti-banding</label>
+              </div>
+              <select id="sel-glow-mode" style="padding:6px 8px; border-radius:6px; border:1px solid var(--rule); background:var(--bg); color:var(--strong); font:11px var(--mono);">
+                <option value="analytic">Analytic Halos + Hash Dither (isoglow.dev)</option>
+                <option value="bloom">4× Downsampled Box Bloom (Blocky Halos)</option>
+                <option value="nodither">Analytic Halos · No Dither (8-bit Banding)</option>
+              </select>
+            </div>
+          </div>
+        </aside>
+      </div>
+    </section>
+
+    <!-- TAB 2: 2D SVG <-> 3D COORDINATE KERNEL -->
+    <section class="tab-panel" id="panel-kernel" role="tabpanel" aria-labelledby="tab-btn-kernel" hidden>
+      <div class="kernel-grid">
+        <div class="kernel-card">
+          <h2>2D SVG Isometric Kernel (ISO.kernel · Affine Plane Matrices)</h2>
+          <p class="ctrl-desc">In 2D mode, `isoglow.dev` projects `(x, y, z)` via `P(x,y,z) = [(x-y)cos(30°), (x+y)sin(30°)-z]` and attaches `<g transform="matrix(...)">` groups (`TOP`, `FRONT`, `SIDE`) so flat 2D SVG `<rect>` and `<text>` elements automatically shear into isometric planes.</p>
+          <div class="kernel-stage" id="svg-kernel-holder"></div>
+          <div class="slider-row">
+            <div class="slider-head">
+              <label for="rng-kernel-r">Shared box corner radius r (cm)</label>
+              <output id="out-kernel-r">8 cm</output>
+            </div>
+            <input id="rng-kernel-r" type="range" min="0" max="24" step="1" value="8">
+          </div>
+        </div>
+
+        <div class="kernel-card">
+          <h2>Shared Coordinate Table (`rbox` in 2D SVG vs. 3D WebGL)</h2>
+          <p class="ctrl-desc">Because both engines consume the exact same `(x, y, z, w, d, h, r)` tuple, every 2D figure in `isoglow.dev/demo/objects` maps 1:1 into `isoglow.dev/demo/gallery/3d.html` via `W(x, y, z) = [0.01x, 0.01z, 0.01y]`.</p>
+          <pre class="code-block" id="kernel-code-readout"></pre>
+          <div class="ctrl-card" style="background:var(--bg);">
+            <h2><span>Light-Theme Polarity Rule</span><span>Dark vs. Light</span></h2>
+            <p class="ctrl-desc">Switch the <strong>◐ Theme</strong> button in the header: in dark mode, active parts emit additive radial halos (`exp(-9d²)(1-d)`) and screen-space dithered light pools. In light mode (`#e9eaea`), additive halos are hidden (`visible = !light`) and `MeshStandardMaterial` is patched (`uAccentFill`) so lit keys become crisp, flat high-contrast ink fills.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- TAB 3: STUDY & CONFLICTS -->
+    <section class="tab-panel" id="panel-study" role="tabpanel" aria-labelledby="tab-btn-study" hidden>
+      <div class="study-layout">
+        <div class="conflict-banner">
+          <h2>Repository Rules vs. Suggested Gemini Prompt — Conflict Ledger</h2>
+          <p class="ctrl-desc" style="margin-bottom:10px;">Your prompt asked us to follow the local `artifacts` repository rules wherever they conflicted with the suggested Gemini web CLI bootstrap, and to call out each conflict so you can decide whether to tune the local rules:</p>
+          <div class="conflict-table-wrap">
+            <table class="conflict-table">
+              <thead>
+                <tr>
+                  <th>Topic</th>
+                  <th>Gemini Web Prompt Suggestion</th>
+                  <th>Local `artifacts` Repo Rule (`AGENTS.md` / `ingest`)</th>
+                  <th>Resolution Shipped Here</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><strong>1. Folder &amp; Catalog Structure</strong></td>
+                  <td>Create an external scratch folder `~/iso-glow-lab` with a standalone `CONTEXT.md`.</td>
+                  <td>Place each experiment in its own directory in `artifacts/`, with `README.md`, `analysis.md`, `build.mjs`, `dist/`, and root `index.html` + `notes/` entries.</td>
+                  <td>Created `iso-glow-lab/` inside the repo, folded and expanded `CONTEXT.md` into `iso-glow-lab/analysis.md`, and wired `scripts/build-pages.mjs` + `index.html`.</td>
+                </tr>
+                <tr>
+                  <td><strong>2. Third-Party Skill Tarball</strong></td>
+                  <td>`curl -fsSL https://iso-glow.vercel.app/iso-glow.tar.gz | tar -xz -C .agents/skills`</td>
+                  <td>Review code/assets for provenance; exclude downloaded bulk or unreviewed third-party bundles from commits (`AGENTS.md` #3, #5).</td>
+                  <td>Did not pollute `.agents/skills`. Inspected live `isoglow.dev` pages directly, documented provenance, and wrote 100% original code.</td>
+                </tr>
+                <tr>
+                  <td><strong>3. External CDN Runtime vs. Self-Contained File</strong></td>
+                  <td>`isoglow.dev` 3D templates use `<script type="importmap">` fetching `three@0.160.0` from `cdn.jsdelivr.net` (plus a 2.5 MB inline blob in `anatomy.html`).</td>
+                  <td>Provide a self-contained HTML artifact that opens directly from disk (`file://`) without a server or external runtime script/style URLs (`build.mjs` enforces this).</td>
+                  <td>Built a zero-dependency 3D projection, hysteresis crease, and G-buffer Sobel engine in `mechanics.mjs` + `app.js`. `dist/iso-glow.html` is ~95 KB with zero external runtime requests.</td>
+                </tr>
+                <tr>
+                  <td><strong>4. `CONTEXT.md` Hypotheses vs. Live Source</strong></td>
+                  <td>Assumed naive `THREE.EdgesGeometry(30°)` (missing curved silhouettes) and `UnrealBloomPass` for glow.</td>
+                  <td>`ingest/SKILL.md`: Distinguish implementation facts established from inspected source from inferences.</td>
+                  <td>Documented and implemented `isoglow.dev`'s actual hysteresis crease follower (`creaseLines`), inverted-hull silhouette pass (`outlineMat`), and analytic dithered glow shaders alongside `EdgesGeometry` and Sobel G-buffer modes.</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!--RESEARCH-->
+      </div>
+    </section>
+  </main>
+
+  <script type="module" src="app.js"></script>
+</body>
+</html>
