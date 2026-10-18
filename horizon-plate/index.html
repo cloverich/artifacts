@@ -5,46 +5,57 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>Horizon Plate</title>
 <meta name="claude:viewport-fit-sides" content="cover">
-<meta name="description" content="A footer lab: turn a landscape into an engraved, dithered, or typed plate that dissolves into the page.">
+<meta name="description" content="A footer lab: turn a landscape into an engraved, screened, or dithered plate that dissolves into the page.">
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
 <header class="bar">
   <span class="mark">Horizon Plate <i>/ footer lab</i></span>
-  <span class="bar-meta">Mask PNG · CSS ink · no runtime JS on the shipped page</span>
+  <nav class="tabs" role="tablist" aria-label="View">
+    <button type="button" role="tab" id="tab-footer" data-tab="footer" aria-controls="lab">Footer</button>
+    <button type="button" role="tab" id="tab-image" data-tab="image" aria-controls="lab">Image</button>
+    <button type="button" role="tab" id="tab-notes" data-tab="notes" aria-controls="notes">Notes</button>
+  </nav>
+  <button type="button" class="toggle" id="togglePanel" aria-controls="panel" aria-expanded="true">Hide controls</button>
 </header>
 
-<main class="lab">
+<main class="lab" id="lab">
   <section class="stage" aria-label="Preview">
-    <div class="site" id="site">
-      <article class="site-article">
-        <p class="kicker">Field notes · No. 014</p>
-        <h2>Where the page ends, the land begins</h2>
-        <p>The last paragraph of a long read should not hit a wall. Here the page keeps going: the footer has no background of its own, and the plate below is only ink. Its sky is the page.</p>
-        <p>Nothing here repaints on scroll. The plate is one small image used as a mask, and the colour is CSS.</p>
-      </article>
-      <footer class="site-footer" id="siteFooter">
-        <div class="plate" id="plate" aria-hidden="true"></div>
-        <canvas class="inspect" id="inspect" aria-hidden="true" hidden></canvas>
-        <div class="foot-grid">
-          <div class="foot-brand">
-            <p class="foot-name">Pinecoder</p>
-            <p class="foot-blurb">Notes on software, systems, and the occasional long walk.</p>
+    <div class="view" id="viewFooter">
+      <div class="site" id="site">
+        <article class="site-article">
+          <p class="kicker">Field notes · No. 014</p>
+          <h2>Where the page ends, the land begins</h2>
+          <p>The last paragraph of a long read should not hit a wall. Here the page keeps going: the footer has no background of its own, and the image below is only ink. Its sky is the page.</p>
+          <p>Nothing here repaints on scroll. The footer image is one small file used as a mask, and the colour is CSS.</p>
+        </article>
+        <footer class="site-footer" id="siteFooter">
+          <canvas class="plate" id="plate" aria-hidden="true"></canvas>
+          <div class="foot-grid">
+            <div class="foot-brand">
+              <p class="foot-name">Pinecoder</p>
+              <p class="foot-blurb">Notes on software, systems, and the occasional long walk.</p>
+            </div>
+            <nav class="foot-cols" aria-label="Example footer links">
+              <div><p class="foot-h">Writing</p><a href="#site">Essays</a><a href="#site">Notes</a><a href="#site">Archive</a></div>
+              <div><p class="foot-h">Work</p><a href="#site">Projects</a><a href="#site">Design system</a><a href="#site">Artifacts</a></div>
+              <div><p class="foot-h">Elsewhere</p><a href="#site">GitHub</a><a href="#site">RSS</a><a href="#site">Email</a></div>
+            </nav>
           </div>
-          <nav class="foot-cols" aria-label="Example footer links">
-            <div><p class="foot-h">Writing</p><a href="#site">Essays</a><a href="#site">Notes</a><a href="#site">Archive</a></div>
-            <div><p class="foot-h">Work</p><a href="#site">Projects</a><a href="#site">Design system</a><a href="#site">Artifacts</a></div>
-            <div><p class="foot-h">Elsewhere</p><a href="#site">GitHub</a><a href="#site">RSS</a><a href="#site">Email</a></div>
-          </nav>
-        </div>
-        <p class="foot-legal"><span>© 2026 Pinecoder</span><span>Set in ink, rendered once.</span></p>
-      </footer>
+          <p class="foot-legal"><span>© 2026 Pinecoder</span><span>Set in ink, rendered once.</span></p>
+        </footer>
+      </div>
     </div>
-    <canvas class="overview" id="overview" aria-label="The whole plate, with the slices common screen widths show"></canvas>
+    <div class="view" id="viewImage" hidden>
+      <p class="cap" id="overviewCap"></p>
+      <canvas class="overview" id="overview" aria-label="The whole footer image, with the part each common screen width shows"></canvas>
+      <p class="cap">Source photo. The box is the part the footer image uses: zoom sets its size, position X and Y where it sits.</p>
+      <canvas class="source" id="source" aria-label="The source photo with the footer image's frame"></canvas>
+    </div>
     <div class="readout" id="readout" aria-live="polite">Rendering…</div>
   </section>
 
-  <aside class="panel" aria-label="Controls">
+  <aside class="panel" id="panel" aria-label="Controls">
     <fieldset>
       <legend>Source</legend>
       <div class="seg" id="photos"></div>
@@ -64,7 +75,7 @@
     </fieldset>
 
     <fieldset>
-      <legend>Algorithm</legend>
+      <legend>Treatment</legend>
       <div class="seg seg-wrap" id="algos"></div>
       <p class="hint" id="algoNote"></p>
       <div class="sub-always" id="sizeRow">
@@ -96,13 +107,13 @@
     </fieldset>
 
     <fieldset>
-      <legend>Plate</legend>
+      <legend>Footer image</legend>
       <div class="seg" id="plates"></div>
       <label class="row-1" for="plateW"><span>Width</span><select id="plateW"></select></label>
       <p class="hint" id="screenNote"></p>
       <label class="row" for="plateH"><span>Height</span><output id="plateHOut"></output></label>
       <input id="plateH" type="range" min="160" max="720" step="10">
-      <label class="row" for="overlap"><span>Text over sky</span><output id="overlapOut"></output></label>
+      <label class="row" for="overlap"><span>Text overlap</span><output id="overlapOut"></output></label>
       <input id="overlap" type="range" min="0" max="0.7" step="0.01">
       <label class="row" for="ax"><span>Position X</span><output id="axOut"></output></label>
       <input id="ax" type="range" min="0" max="1" step="0.01">
@@ -111,7 +122,6 @@
       <p class="hint">Like CSS <code>object-position</code>: the photo's point at X% sits X% across every screen, so a subject at the edge stays in view. Y 100% keeps the bottom of the photo.</p>
       <label class="row" for="zoom"><span>Zoom</span><output id="zoomOut"></output></label>
       <input id="zoom" type="range" min="1" max="3" step="0.05">
-      <div class="seg" id="views"></div>
     </fieldset>
 
     <fieldset>
@@ -121,7 +131,7 @@
         <label for="format">Format <select id="format"><option value="png">PNG, indexed</option><option value="webp">WebP, lossy</option></select></label>
       </div>
       <div class="actions">
-        <button id="download" type="button">Export this plate</button>
+        <button id="download" type="button">Export PNG</button>
         <button id="copy" type="button">Copy CSS</button>
       </div>
       <p class="hint" id="exportNote"></p>
@@ -130,10 +140,11 @@
   </aside>
 </main>
 
-<section class="notes" aria-labelledby="howTitle">
-  <h2 id="howTitle">How the plate is made</h2>
+<section class="notes" id="notes" aria-labelledby="howTitle" hidden>
+  <h2 id="howTitle">How the footer image is made</h2>
+  <p class="lede">Terms. <b>Plate</b> is the printmaking word for the engraved or etched image that carries ink; here it means the footer image, made in two sizes, <b>wide</b> and <b>narrow</b>. The treatments are <b>halftoning</b> and <b>dithering</b> (in print, <b>screening</b>): ways to show tone with one ink by varying the size, spacing, or density of marks.</p>
   <ol class="pipeline">
-    <li><b>Crop.</b> Each plate has a fixed CSS width and height. The photo is cover-fitted into that frame (zoom and crop position are per plate) and reduced to Rec. 709 luminance. The preview is that frame, centred and cropped by the screen, exactly as it ships.</li>
+    <li><b>Frame.</b> Each plate has a fixed CSS width and height. The photo is cover-fitted into that frame (zoom and position are per plate) and reduced to Rec. 709 luminance. Position works like <code>object-position</code> twice over: the photo inside the plate, and the plate on the screen (<code>left: X%; transform: translateX(-X%)</code>). So the photo's point at X% sits X% across every screen, and the screen crops the rest. The Footer tab shows that geometry exactly as it ships.</li>
     <li><b>Tone.</b> Auto-levels on the 0.5 / 99.5 percentiles, contrast, then polarity: which end of the range takes ink. The ink floor drops faint ink to zero, so the sky meets the page colour exactly. The dissolve multiplies ink by a ramp, so dots and lines thin out instead of fading in opacity.</li>
     <li><b>Mark-making.</b> Line fields and screens run at full resolution with one pixel of analytic antialiasing. Dithers run on their own dot grid, one cell per dot.</li>
     <li><b>Quantize and encode.</b> Coverage becomes 2 to 256 levels in an indexed PNG. Every palette entry is the ink colour, and transparency carries the coverage, so the file works as a CSS mask and as a plain image.</li>

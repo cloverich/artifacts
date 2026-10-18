@@ -80,7 +80,7 @@ const S = {
   sizes: Object.fromEntries(Object.entries(ALGOS).map(([k, a]) => [k, a.init || 0])),
   field: "wave", hatch: true, angle: 45, kernel: "atkinson",
   inkLight: false, lift: 0.12, fade: 0.25, contrast: 1, gamma: 1,
-  view: "plate", bits: "auto", format: "png",
+  tab: "footer", bits: "auto", format: "png",
   bg: "", ink: "",
 };
 const P = () => S.plates[S.plate];
@@ -148,10 +148,22 @@ function compute(src, p, scale, cache = true) {
   else if (S.algo === "engrave") cov = engrave(t, W, H, { pitch: size * scale, field: S.field, hatch: S.hatch });
   else if (S.algo === "halftone") cov = halftone(t, W, H, { pitch: size * scale, angle: (S.angle * Math.PI) / 180 });
   else if (S.algo === "scanline") cov = scanline(t, W, H, { pitch: Math.max(2, Math.round(size * scale)) });
-  else cov = Uint8Array.from(t, (v) => v * 255 + 0.5);
+  else { cov = new Uint8Array(t.length); for (let i = 0; i < t.length; i++) cov[i] = t[i] * 255 + 0.5; }
   ms.crop = t1 - t0; ms.tone = t2 - t1; ms.marks = performance.now() - t2;
   const bits = S.bits === "auto" ? a.bits : +S.bits;
   return { cov, cw: W, ch: H, bits, ms, lum, W, H, cssW: W / scale, cssH: H / scale, scale };
+}
+
+// Level indices exactly as the PNG stores them; the preview paints these
+// too, so it shows the quantized file, not the unquantized coverage.
+// Continuous output dithers between levels; mark-making output is already
+// near-binary and stays crisp.
+function levels(r) {
+  if (!r.q) {
+    const smoothTone = S.algo === "inkmap" || S.algo === "scanline";
+    r.q = quantize(r.cov, r.bits, smoothTone && r.bits < 8 ? r.cw : 0);
+  }
+  return r.q;
 }
 
 const hexRgb = (h) => [1, 3, 5].map((i) => parseInt(h.slice(i, i + 2), 16));
@@ -168,105 +180,161 @@ async function encode(r) {
     const blob = await c.convertToBlob({ type: "image/webp", quality: 0.8 });
     if (blob.type === "image/webp") return { blob, ext: "webp", label: "WebP" };
   }
-  // Continuous output dithers between levels; mark-making output is already
-  // near-binary and stays crisp.
-  const smoothTone = S.algo === "inkmap" || S.algo === "scanline";
-  const png = await encodePNG(quantize(r.cov, r.bits, smoothTone && r.bits < 8 ? r.cw : 0), r.cw, r.ch, r.bits, hexRgb(S.ink));
+  const png = await encodePNG(levels(r), r.cw, r.ch, r.bits, hexRgb(S.ink));
   return { blob: new Blob([png], { type: "image/png" }), ext: "png", label: `${1 << r.bits}-level PNG` };
 }
 
 // ── Preview ──────────────────────────────────────────────────────────────
-const plate = $("plate"), inspect = $("inspect");
-let token = 0, maskUrl = "";
+// Only the active tab draws. The footer paints level indices straight into a
+// canvas in the ink colour (what the mask would show), so dragging a slider
+// never encodes or decodes a PNG; the file size is measured once the
+// controls go still.
+const plate = $("plate");
+let token = 0, last = null, dirty = true, measureTimer = 0, dragging = false;
 
 function previewScale() {
   const a = ALGOS[S.algo], p = P();
   if (a.fixedScale) return a.fixedScale;
   if (a.grid) return gridScale();
-  const dpr = Math.min(2, window.devicePixelRatio || 1);
+  // While a slider is held, lines and screens draft at 1× (a quarter of the
+  // pixels on a 2× screen); releasing it renders full resolution.
+  const dpr = dragging ? 1 : Math.min(2, window.devicePixelRatio || 1);
   return p.width * p.height * dpr * dpr <= 4e6 ? dpr : 1;
 }
 
 async function render() {
+  if (S.tab === "notes") { dirty = true; return; }
   const my = ++token;
   const src = await sourceImage().catch(() => null);
   if (my !== token) return;
   if (!src) { $("readout").textContent = "The photo could not be loaded."; return; }
-  const scale = previewScale();
-  const r = compute(src, P(), scale);
+  const r = compute(src, P(), previewScale());
+  const tp = performance.now();
+  paintPlate(r);
+  r.ms.paint = performance.now() - tp;
+  last = r; dirty = false;
+  if (S.tab === "image") drawImageTab();
+  readout(r, null);
+  updateSnippet();
+  clearTimeout(measureTimer);
+  if (!dragging) measureTimer = setTimeout(() => measure(r, my), 300);
+}
+
+async function measure(r, my) {
   const te = performance.now();
   const enc = await encode(r);
-  r.ms.encode = performance.now() - te;
-  if (my !== token) return;
-  const url = URL.createObjectURL(enc.blob);
-  plate.style.width = `${r.cssW}px`;
-  plate.style.height = `${r.cssH}px`;
-  plate.style.setProperty("--mask", `url("${url}")`);
-  plate.dataset.pixelated = String(!!ALGOS[S.algo].grid);
-  if (maskUrl) URL.revokeObjectURL(maskUrl);
-  maskUrl = url;
-  drawInspect(r);
-  drawOverview(url, r);
+  if (my === token) readout(r, enc, performance.now() - te);
+}
+
+function readout(r, enc, encodeMs) {
   const total = Object.values(r.ms).reduce((s, v) => s + v, 0);
   const a = ALGOS[S.algo], exp = a.exportScale;
+  const size = enc ? `${enc.label} · <b>${kb(enc.blob.size)}</b>` : `${1 << r.bits}-level PNG · measuring…`;
   $("readout").innerHTML =
-    `${S.plate === "wide" ? "Wide" : "Narrow"} plate <b>${Math.round(r.cssW)}×${Math.round(r.cssH)} CSS px</b> · preview mask <b>${r.cw}×${r.ch}</b> · ${enc.label} · <b>${kb(enc.blob.size)}</b>` +
-    (scale !== exp && !a.grid ? ` (export at ${exp}× is larger)` : "") + "<br>" +
-    `crop ${fmt(r.ms.crop)} ms · tone ${fmt(r.ms.tone)} · marks ${fmt(r.ms.marks)} · encode ${fmt(r.ms.encode)} · <b>${fmt(total)} ms</b> once; nothing runs on scroll`;
-  updateSnippet();
+    `${S.plate === "wide" ? "Wide" : "Narrow"} image <b>${Math.round(r.cssW)}×${Math.round(r.cssH)} CSS px</b> · preview <b>${r.cw}×${r.ch}</b> px · ${size}` +
+    (r.scale !== exp && !a.grid ? ` (export at ${exp}× is larger)` : "") + "<br>" +
+    `crop ${fmt(r.ms.crop)} ms · tone ${fmt(r.ms.tone)} · marks ${fmt(r.ms.marks)} · paint ${fmt(r.ms.paint)} · <b>${fmt(total)} ms</b>` +
+    (enc ? ` · encode ${fmt(encodeMs)} ms` : "") + ` · the shipped page runs none of it`;
 }
 
-function drawInspect(r) {
-  inspect.hidden = S.view === "plate";
-  plate.style.visibility = S.view === "plate" ? "" : "hidden";
-  if (S.view === "plate") return;
-  inspect.width = r.W; inspect.height = r.H;
-  inspect.style.width = `${P().width}px`;
-  inspect.style.height = `${P().height}px`;
-  const ctx = inspect.getContext("2d"), img = ctx.createImageData(r.W, r.H);
-  for (let i = 0; i < r.W * r.H; i++) {
-    img.data[i * 4] = img.data[i * 4 + 1] = img.data[i * 4 + 2] = r.lum[i] * 255;
-    img.data[i * 4 + 3] = 255;
-  }
+// Ink-coloured RGBA from level indices: one 32-bit write per pixel.
+function paintPlate(r) {
+  const q = levels(r), max = (1 << r.bits) - 1, [ir, ig, ib] = hexRgb(S.ink);
+  const pal = new Uint32Array(max + 1);
+  for (let i = 0; i <= max; i++) pal[i] = ((Math.round((i / max) * 255) << 24) | (ib << 16) | (ig << 8) | ir) >>> 0;
+  if (plate.width !== r.cw || plate.height !== r.ch) { plate.width = r.cw; plate.height = r.ch; }
+  const ctx = plate.getContext("2d"), img = ctx.createImageData(r.cw, r.ch), px = new Uint32Array(img.data.buffer);
+  for (let i = 0; i < q.length; i++) px[i] = pal[q[i]];
   ctx.putImageData(img, 0, 0);
+  plate.style.width = `${r.cssW}px`;
+  plate.style.height = `${r.cssH}px`;
+  plate.dataset.pixelated = String(!!ALGOS[S.algo].grid);
 }
 
-// The whole plate at a glance, with the slices that common screens show.
+// Image tab: the whole plate with the slice each common screen shows, and
+// the source photo with the plate's frame on it.
 const SCREENS = { wide: [1280, 1440, 1920], narrow: [360, 390, 430, 768] };
-function drawOverview(url, r) {
-  const c = $("overview"), box = c.getBoundingClientRect(), dpr = window.devicePixelRatio || 1;
-  const full = Math.max(1, Math.round(box.width));
-  const h = Math.min(140, Math.round((full * r.cssH) / r.cssW)), w = Math.round((h * r.cssW) / r.cssH), x0 = Math.round((full - w) / 2);
-  c.width = full * dpr; c.height = (h + 16) * dpr;
-  c.style.height = `${h + 16}px`;
+function drawImageTab() {
+  if (!last) return;
+  const r = last, p = P(), accent = getComputedStyle(document.documentElement).getPropertyValue("--accent").trim();
+  const c = $("overview"), full = Math.max(1, Math.round(c.parentElement.clientWidth)), dpr = window.devicePixelRatio || 1;
+  const screens = SCREENS[S.plate].filter((s) => s < r.cssW), ROW = 16;
+  const w = full, h = Math.round((w * r.cssH) / r.cssW), H = h + 6 + screens.length * ROW;
+  c.width = w * dpr; c.height = H * dpr;
+  c.style.height = `${H}px`;
   const ctx = c.getContext("2d");
   ctx.scale(dpr, dpr);
-  ctx.translate(x0, 0);
-  const img = new Image();
-  img.onload = () => {
-    ctx.fillStyle = S.bg;
-    ctx.fillRect(0, 0, w, h);
-    ctx.imageSmoothingEnabled = !ALGOS[S.algo].grid;
-    ctx.drawImage(img, 0, 0, w, h);
-    const css = getComputedStyle(document.documentElement);
-    ctx.strokeStyle = ctx.fillStyle = css.getPropertyValue("--accent").trim();
-    ctx.font = "10px ui-monospace, Menlo, monospace";
-    ctx.textAlign = "center";
-    ctx.lineWidth = 1;
-    const k = w / r.cssW;
-    SCREENS[S.plate].filter((s) => s < r.cssW).forEach((s, i) => {
-      const x0 = P().ax * (w - s * k), x1 = x0 + s * k, y = h + 4 + (i % 2) * 6;
-      ctx.beginPath(); ctx.moveTo(x0 + 0.5, h); ctx.lineTo(x0 + 0.5, y); ctx.moveTo(x1 - 0.5, h); ctx.lineTo(x1 - 0.5, y); ctx.stroke();
-      ctx.fillText(String(s), x1 + 12, y + 3);
-    });
-  };
-  img.src = url;
+  ctx.fillStyle = S.bg;
+  ctx.fillRect(0, 0, w, h);
+  ctx.imageSmoothingEnabled = !ALGOS[S.algo].grid;
+  ctx.drawImage(plate, 0, 0, w, h);
+  // One row per screen: a bracket over the plate columns that screen shows.
+  const k = w / r.cssW;
+  ctx.strokeStyle = ctx.fillStyle = accent;
+  ctx.font = "10px ui-monospace, Menlo, monospace";
+  ctx.textBaseline = "middle";
+  ctx.lineWidth = 1;
+  screens.forEach((s, i) => {
+    const x0 = Math.round(p.ax * (r.cssW - s) * k) + 0.5, x1 = Math.round(x0 + s * k) - 1, y = h + 6 + i * ROW + ROW / 2;
+    ctx.beginPath();
+    ctx.moveTo(x0, y - 5); ctx.lineTo(x0, y); ctx.lineTo(x1, y); ctx.lineTo(x1, y - 5);
+    ctx.stroke();
+    const label = `${s} px screen`, tw = ctx.measureText(label).width;
+    const lx = Math.min(Math.max(x0 + 6, 0), w - tw - 6);
+    ctx.clearRect(lx - 3, y - 6, tw + 6, 12);
+    ctx.fillText(label, lx, y);
+  });
+  $("overviewCap").textContent = `The whole ${S.plate} image, ${Math.round(r.cssW)} × ${Math.round(r.cssH)} CSS px. Each bracket is the part a screen of that width shows; the screen crops the rest.`;
+  drawSource();
+}
+
+function drawSource() {
+  sourceImage().then((src) => {
+    if (S.tab !== "image") return;
+    const c = $("source"), p = P(), sw = src.naturalWidth || src.width, sh = src.naturalHeight || src.height;
+    const dpr = window.devicePixelRatio || 1, maxW = c.parentElement.clientWidth;
+    const w = Math.round(Math.min(maxW, (innerHeight * 0.55 * sw) / sh)), h = Math.round((w * sh) / sw);
+    c.width = w * dpr; c.height = h * dpr;
+    c.style.width = `${w}px`; c.style.height = `${h}px`;
+    const ctx = c.getContext("2d");
+    ctx.scale(dpr, dpr);
+    ctx.drawImage(src, 0, 0, w, h);
+    // The frame in photo pixels: the inverse of the cover fit in luminance().
+    const k = Math.max(p.width / sw, p.height / sh) * p.zoom, dw = sw * k, dh = sh * k;
+    const f = w / sw, fx = (-(p.width - dw) * p.ax / k) * f, fy = (-(p.height - dh) * p.ay / k) * f, fw = (p.width / k) * f, fh = (p.height / k) * f;
+    ctx.fillStyle = "rgba(0,0,0,0.55)";
+    ctx.fillRect(0, 0, w, fy); ctx.fillRect(0, fy + fh, w, h - fy - fh);
+    ctx.fillRect(0, fy, fx, fh); ctx.fillRect(fx + fw, fy, w - fx - fw, fh);
+    ctx.strokeStyle = "#fff";
+    ctx.lineWidth = 1.5;
+    ctx.strokeRect(fx + 0.75, fy + 0.75, fw - 1.5, fh - 1.5);
+  });
 }
 
 let pending = 0;
 function schedule() {
   cancelAnimationFrame(pending);
   pending = requestAnimationFrame(() => render());
+}
+
+function setTab(tab) {
+  S.tab = tab;
+  document.querySelectorAll(".tabs button").forEach((b) => b.setAttribute("aria-selected", String(b.dataset.tab === tab)));
+  $("lab").hidden = tab === "notes";
+  $("notes").hidden = tab !== "notes";
+  $("viewFooter").hidden = tab !== "footer";
+  $("viewImage").hidden = tab !== "image";
+  if (tab === "notes") return;
+  if (dirty) schedule();
+  else if (tab === "image") drawImageTab();
+}
+
+function setPanel(open) {
+  $("lab").classList.toggle("collapsed", !open);
+  $("panel").hidden = !open;
+  $("togglePanel").setAttribute("aria-expanded", String(open));
+  $("togglePanel").textContent = open ? "Hide controls" : "Show controls";
+  try { localStorage.setItem("horizon-plate:panel", open ? "open" : "closed"); } catch {}
 }
 
 // ── Export ───────────────────────────────────────────────────────────────
@@ -296,7 +364,7 @@ function snippetText() {
    ${note("wide", dw)} */
 .site-footer {
   position: relative; isolation: isolate; overflow: clip;
-  min-height: ${dn.cssH}px; padding-bottom: ${pad(n)}px; /* text over sky: ${Math.round(n.overlap * 100)}% */
+  min-height: ${dn.cssH}px; padding-bottom: ${pad(n)}px; /* text overlap: ${Math.round(n.overlap * 100)}% */
   content-visibility: auto; contain-intrinsic-size: auto ${Math.round(n.height + 240)}px;
 }
 .site-footer::before {
@@ -322,7 +390,7 @@ function snippetText() {
 function updateSnippet() {
   $("snippet").textContent = snippetText();
   const a = ALGOS[S.algo], d = plateDims(S.plate);
-  $("exportNote").textContent = `This plate ships ${d.cw}×${d.ch} (${a.grid ? "one pixel per dot" : a.exportScale === 2 ? "2× for sharp lines" : "½× of CSS size"}). The narrow plate is used below ${S.plates.narrow.width} px; the wide one from there up.`;
+  $("exportNote").textContent = `The ${S.plate} image ships ${d.cw}×${d.ch} px (${a.grid ? "one pixel per dot" : a.exportScale === 2 ? "2× for sharp lines" : "½× of CSS size"}). The narrow image is used below ${S.plates.narrow.width} px; the wide one from there up.`;
 }
 
 const downloadsReady = window.claude?.use ? window.claude.use("downloads").catch(() => null) : Promise.resolve(undefined);
@@ -359,7 +427,7 @@ async function exportPlate() {
     $("exportNote").textContent = err?.code === "declined" ? "Export cancelled." : `Export failed: ${err?.message || err}`;
   } finally {
     btn.disabled = false;
-    btn.textContent = "Export this plate";
+    btn.textContent = "Export PNG";
   }
 }
 
@@ -451,9 +519,21 @@ function sync() {
   for (const v of S.plate === "wide" ? [1600, 2400, 3200] : [600, 820, 1024]) wsel.add(new Option(`${v} px`, v));
   wsel.value = P().width;
   $("screenNote").textContent = S.plate === "wide"
-    ? `Shown on screens ${S.plates.narrow.width} px and wider. The stage shows the centre; the strip below shows the whole plate.`
-    : `Shown below ${S.plates.narrow.width} px. The stage is framed at phone width, 390 px.`;
+    ? `Shown on screens ${S.plates.narrow.width} px and wider; the screen crops it. The Image tab shows all of it.`
+    : `Shown below ${S.plates.narrow.width} px. The Footer tab frames it at phone width, 390 px.`;
   paintSite();
+}
+
+// Colour only: repaint the cached levels, no pipeline run.
+let repaintFrame = 0;
+function repaintSoon() {
+  cancelAnimationFrame(repaintFrame);
+  repaintFrame = requestAnimationFrame(() => {
+    if (!last) return;
+    paintPlate(last);
+    if (S.tab === "image") drawImageTab();
+    updateSnippet();
+  });
 }
 
 function initControls() {
@@ -464,8 +544,7 @@ function initControls() {
   seg("fields", [["flat", "Flat"], ["wave", "Guilloché"], ["relief", "Relief"]], () => S.field, (k) => (S.field = k));
   seg("kernels", [["atkinson", "Atkinson"], ["fs", "Floyd–Steinberg"]], () => S.kernel, (k) => (S.kernel = k));
   seg("polarity", [["false", "Ink the shadows"], ["true", "Ink the light"]], () => S.inkLight, (k) => (S.inkLight = k === "true"));
-  seg("plates", [["wide", "Wide plate"], ["narrow", "Narrow plate"]], () => S.plate, (k) => (S.plate = k));
-  seg("views", [["plate", "Plate"], ["source", "Source crop"]], () => S.view, (k) => (S.view = k));
+  seg("plates", [["wide", "Wide"], ["narrow", "Narrow"]], () => S.plate, (k) => (S.plate = k));
 
   range("angle", () => S.angle, (v) => (S.angle = v), (v) => `${v}°`);
   range("lift", () => S.lift, (v) => (S.lift = v), pct);
@@ -483,13 +562,14 @@ function initControls() {
   const themeSel = $("theme");
   for (const [k, th] of Object.entries(THEMES)) themeSel.add(new Option(th.label, k));
   themeSel.addEventListener("change", () => { applyTheme(themeSel.value); sync(); schedule(); });
-  $("bg").addEventListener("input", (e) => { S.bg = e.target.value; paintSite(); });
-  $("ink").addEventListener("input", (e) => { S.ink = e.target.value; paintSite(); });
-  $("ink").addEventListener("change", () => schedule()); // the PNG palette follows the ink
+  $("bg").addEventListener("input", (e) => { S.bg = e.target.value; paintSite(); if (S.tab === "image") repaintSoon(); });
+  $("ink").addEventListener("input", (e) => { S.ink = e.target.value; paintSite(); repaintSoon(); });
   $("bits").addEventListener("change", (e) => { S.bits = e.target.value; schedule(); });
   $("format").addEventListener("change", (e) => { S.format = e.target.value; schedule(); });
   $("plateW").addEventListener("change", (e) => { P().width = +e.target.value; sync(); schedule(); });
   $("download").addEventListener("click", exportPlate);
+  document.querySelectorAll(".tabs button").forEach((b) => b.addEventListener("click", () => setTab(b.dataset.tab)));
+  $("togglePanel").addEventListener("click", () => setPanel($("panel").hidden));
   $("copy").addEventListener("click", copyCSS);
 
   // Image input: file picker, drag and drop anywhere on the bench, paste.
@@ -519,9 +599,12 @@ function initControls() {
     const item = [...(e.clipboardData?.items || [])].find((i) => i.type.startsWith("image/"));
     if (item) load(item.getAsFile());
   });
-  // The overview strip follows the stage width.
+  $("panel").addEventListener("pointerdown", (e) => { if (e.target.type === "range") dragging = true; });
+  window.addEventListener("pointerup", () => { if (dragging) { dragging = false; schedule(); } });
+  window.addEventListener("pointercancel", () => { if (dragging) { dragging = false; schedule(); } });
+  // The Image tab follows the stage width.
   let lastW = 0;
-  new ResizeObserver(([e]) => { const w = Math.round(e.contentRect.width); if (w !== lastW) { lastW = w; schedule(); } }).observe($("overview"));
+  new ResizeObserver(([e]) => { const w = Math.round(e.contentRect.width); if (w !== lastW) { lastW = w; if (S.tab === "image") drawImageTab(); } }).observe(document.querySelector(".stage"));
 }
 
 function renderCredits() {
@@ -539,5 +622,7 @@ applyTheme(S.theme);
 initControls();
 renderCredits();
 sync();
+setTab(S.tab);
+setPanel((() => { try { return localStorage.getItem("horizon-plate:panel") !== "closed"; } catch { return true; } })());
 $("readout").textContent = "Loading the sample photo…";
 schedule();

@@ -185,10 +185,19 @@ export function scanline(t, w, h, o) {
 // so 16 levels read as continuous tone instead of banding.
 export function quantize(c, bits, w = 0) {
   const max = (1 << bits) - 1, out = new Uint8Array(c.length);
-  for (let i = 0; i < c.length; i++) {
-    const d = w ? (BAYER8[((i / w) & 7) * 8 + ((i % w) & 7)] + 0.5) / 64 - 0.5 : 0;
-    const v = Math.round((c[i] / 255) * max + d);
-    out[i] = v < 0 ? 0 : v > max ? max : v;
+  if (!w) {
+    const lut = new Uint8Array(256);
+    for (let v = 0; v < 256; v++) lut[v] = Math.round((v / 255) * max);
+    for (let i = 0; i < c.length; i++) out[i] = lut[c[i]];
+    return out;
+  }
+  const h = c.length / w, off = Float32Array.from(BAYER8, (b) => (b + 0.5) / 64 - 0.5);
+  for (let y = 0, i = 0; y < h; y++) {
+    const row = (y & 7) * 8;
+    for (let x = 0; x < w; x++, i++) {
+      const v = Math.round((c[i] / 255) * max + off[row + (x & 7)]);
+      out[i] = v < 0 ? 0 : v > max ? max : v;
+    }
   }
   return out;
 }

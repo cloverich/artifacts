@@ -1,6 +1,6 @@
 # Horizon Plate
 
-A footer lab. The page runs straight into the footer, and the footer's sky is the page: a landscape reduced to one ink (engraving, halftone, Bayer, error diffusion, mezzotint, scanline, or ASCII) that dissolves dot by dot at the top. Built to align on a treatment before adding footers to xylo and pinecoder.dev.
+A footer lab. The page runs straight into the footer, and the footer's sky is the page: a landscape reduced to one ink (engraving, halftone, error diffusion, scanline, or plain continuous tone) that dissolves dot by dot at the top. Built to align on a treatment before adding footers to xylo and pinecoder.dev.
 
 Inspired by three supplied footer screenshots (a "Finance" footer, a "Nova Labs" footer, and GLAUX by [@AdityaSur11](https://x.com/AdityaSur11) on X). No affiliation; no reference images are copied.
 
@@ -11,13 +11,13 @@ node horizon-plate/build.mjs        # → horizon-plate/dist/horizon-plate.html 
 node --test horizon-plate/mechanics.test.mjs
 ```
 
-Start from a sample photo or drop, paste, or choose your own; it is processed in the browser and never uploaded. Tune a **wide** and a **narrow** plate (each with its own width, height, text overlap, crop, and zoom). **Export this plate** saves `plate-wide.png` or `plate-narrow.png` exactly as previewed; **Copy CSS** gives the mobile-first footer rule that loads one or the other.
+Start from a sample photo or drop, paste, or choose your own; it is processed in the browser and never uploaded. Tabs switch between **Footer** (the shipped geometry), **Image** (the whole plate, the slice each screen width shows, and the source photo with the plate's frame), and **Notes**; Hide controls gives the preview the full width. Tune a **wide** and a **narrow** plate (each with its own width, height, text overlap, position, and zoom). Position works like CSS `object-position`: the photo's point at X% sits X% across every screen. **Export PNG** saves `plate-wide.png` or `plate-narrow.png` exactly as previewed; **Copy CSS** gives the mobile-first footer rule that loads one or the other.
 
 ## Source
 
-- `mechanics.mjs`: DOM-free pipeline (tone, eight algorithms, quantize with optional dither, indexed PNG encoder with row filters). Runs unchanged in Node, so the same code can render plates at build time.
+- `mechanics.mjs`: DOM-free pipeline (tone, four mark algorithms, quantize with optional dither, indexed PNG encoder with row filters). Runs unchanged in Node, so the same code can render plates at build time.
 - `photos/`: the three sample photographs (Git LFS), inlined into the build as data URIs.
-- `app.js`: lab UI, theme presets, preview, export.
+- `app.js`: lab UI, theme presets, tabbed preview (canvas in the ink colour; the PNG is encoded only once controls go still), export.
 - `index.html`, `style.css`: page and styles. `build.mjs` inlines everything, the photos, and `analysis.md`, and also writes `dist/artifact.html`, a head-less fragment for publishing as a Claude artifact.
 - `analysis.md`: the study: what the references do, the pipeline, performance rules, alternatives, measured file sizes, and open questions.
 

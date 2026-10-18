@@ -1,6 +1,6 @@
 # Horizon Plate: footers that dissolve into a landscape
 
-Study date: 17 Oct 2026; revised the same day after first use. Evidence: three footer screenshots supplied by the user (a "Finance" footer with a galloping horse, a "Nova Labs" footer with camels under a moon, and a "GLAUX" footer posted by @AdityaSur11 on X). No live pages or source were inspected; everything below about the references is read from the images and labelled as observation or inference.
+Study date: 17 Oct 2026; revised the same day after first use, and again on 18 Oct 2026 (position model, fewer treatments, finer marks, tabbed lab). Evidence: three footer screenshots supplied by the user (a "Finance" footer with a galloping horse, a "Nova Labs" footer with camels under a moon, and a "GLAUX" footer posted by @AdityaSur11 on X). No live pages or source were inspected; everything below about the references is read from the images and labelled as observation or inference.
 
 ## What the references do
 
@@ -25,17 +25,16 @@ Inference: the GLAUX plate is an illustration in an engraved style rather than a
 
 The lab renders an **alpha mask**, not an image, and paints ink through it with CSS.
 
-1. **Crop + luminance.** Cover-fit the source into the plate frame (fixed CSS width × height, per-plate zoom and crop position) at the algorithm's scale, then Rec. 709 luminance.
+1. **Crop + luminance.** Cover-fit the source into the plate frame (fixed CSS width × height, per-plate zoom and position) at the algorithm's scale (the dither samples straight onto its dot grid), then Rec. 709 luminance.
 2. **Tone → ink amount.** Auto-levels on the 0.5/99.5 percentiles; contrast about mid-grey; polarity (`ink the shadows` = 1 − L, `ink the light` = L); an **ink floor** (values below it become exactly zero so the sky is clean page colour); gamma; and a **dissolve**: ink is multiplied by a smoothstep ramp over the top N% of rows. Because the ramp scales *ink* rather than opacity, a dither dissolves dot by dot and an engraving thins line by line, which is how the references meet the page.
 3. **Marks.**
    - *Engrave*: ink where `|fract(u/s) − ½|·2 < tone·0.82`, edge antialiased over ~1px. `u = y` (flat), `y + A·Σsin(kx)` (guilloché), or `y − R·blur(ink)` (relief: lines bow over bright/dark masses). Optional second family at ~60° for deep tones. Ported from xylo's EngravingLab.
    - *Halftone*: Euclidean spot `½(cos u + cos v)` on a rotated lattice, threshold `1 − 2·tone`. Dots touch at 50% and invert into holes.
-   - *Bayer*: 8×8 ordered threshold on the dot grid.
    - *Diffuse*: Floyd–Steinberg (serpentine, full error) or Atkinson (6/8 of error: drops faint dots, crushes shadows, so skies go cleaner and shapes read more graphic).
-   - *Mezzotint*: threshold against white noise per dot. Closest to the Finance grain at 1 bit.
    - *Scanline*: fixed-width rows; tone sets row intensity, not width. Requires grey levels.
-   - *ASCII*: cell average picks a glyph from ` .,:;-=+*#%@`; glyphs are rasterised to the mask.
    - *Ink map*: no marks; the tone curve itself as continuous coverage. Shipped at half resolution.
+
+   Dropped after first use: Bayer (ordered 8×8 threshold; the crosshatch read as dated), mezzotint (white-noise threshold; Floyd–Steinberg at a fine dot gives a similar grain with less noise), and ASCII (glyph cells; worth its own study rather than a footer option). Mark sizes now run down to 0.5–1 CSS px: on first use every treatment looked best at the old minimum, so the ranges moved down to one device pixel on a 2× screen.
 4. **Quantize + encode.** Coverage → 2, 4, 16, or 256 levels (continuous output can dither between levels) → **indexed PNG** written in the page (CRC32 + `CompressionStream('deflate')`). Every palette entry is the ink colour; `tRNS` carries the coverage ramp. One file is therefore both a CSS alpha mask and a ready-to-use pre-inked `<img>`.
 5. **Ink.** `background: var(--ink)` through `mask-image`. Theme switches recolour without re-rendering. Polarity cannot be switched by CSS: a light theme and a dark theme that both want "photographic positive" need two masks (or one mask and an inverted source).
 
@@ -46,7 +45,7 @@ The lab renders an **alpha mask**, not an image, and paints ink through it with 
 - **Scroll cost is compositing only.** A static masked element rasterises once. Avoid `background-attachment: fixed`, scroll-linked parallax, `filter` / `backdrop-filter` on or over the plate; each forces repaints.
 - **Below the fold.** `content-visibility: auto` with `contain-intrinsic-size` keeps the footer out of first render. The mask is fetched only when used. (CSS `mask-image` cannot be `loading="lazy"`; if that matters, use an `<img>` pre-inked with the palette.)
 
-Readouts in the lab report crop, tone, mark, and encode times and the exact PNG size per state. Those numbers are from the viewer's machine; nothing here claims a benchmark.
+Readouts in the lab report crop, tone, mark, paint, and encode times and the exact PNG size per state. The lab itself previews into a canvas in the ink colour (the same level indices the PNG stores), encodes only once the controls go still, drafts lines and screens at 1× while a slider is held, and draws only the active tab. Those numbers are from the viewer's machine; nothing here claims a benchmark.
 
 ### Measured file sizes
 
@@ -56,7 +55,7 @@ Read from the lab in headless Chromium with the sample photographs (17 Oct 2026)
 | --- | --- | --- |
 | Dusk: Atkinson, 2 px dots, sunset, 2400×380 | 1200×190, 1-bit PNG | 8 KB |
 | Toile: guilloché engraving, sunset, 2400×380 | 4800×760 (2×), 1-bit PNG | 44 KB |
-| Mezzotint, 1 px grain, sailboat, 2400×380 | 2400×380, 1-bit PNG | 79 KB |
+| Mezzotint (since dropped), 1 px grain, sailboat, 2400×380 | 2400×380, 1-bit PNG | 79 KB |
 | Scanline, sunset, 2400×380 (preview at 1×) | 2400×380, 16-level PNG | 23 KB |
 | Ink map, sailboat, 2400×620 | 1200×310 (½×), 256-level PNG | 140 KB |
 | same | lossy WebP (alpha is lossless) | 135 KB |
@@ -73,9 +72,11 @@ Conclusions:
 
 ## Crop, don't scale: two plates (responsive)
 
-Dots must stay at a fixed CSS size or they beat against the device pixel grid (moiré, uneven dots). So each plate has a fixed CSS width, is centred, and is clipped by the screen (`overflow: clip` on the footer, so the oversize pseudo-element never causes horizontal scroll). The lab previews exactly that geometry; the strip under the stage shows the whole plate and brackets what 1280, 1440, and 1920 px screens (or 360–768 px phones) actually see.
+Dots must stay at a fixed CSS size or they beat against the device pixel grid (moiré, uneven dots). So each plate has a fixed CSS width and is clipped by the screen (`overflow: clip` on the footer, so the oversize pseudo-element never causes horizontal scroll). The Footer tab previews exactly that geometry; the Image tab shows the whole plate and brackets what 1280, 1440, and 1920 px screens (or 360–768 px phones) actually see, above the source photo with the plate's frame on it.
 
-One plate cannot serve both a phone and a desktop: a 2400 px plate on a 390 px phone shows a sliver. The lab therefore makes two, each with its own width, height, text overlap, crop, and zoom, sharing the algorithm and tone so they read as one print:
+**Position, not crop.** The first version always centred the plate on screen and treated X/Y as a crop inside it. That fails for a subject near the edge: a 4:3 photo cover-fitted into a 2400×380 plate is width-limited, so at zoom 1 horizontal crop does nothing, and a sailboat at 89% of the photo sits at x ≈ 2140 of 2400, outside any 1920 px screen. Now X and Y work like CSS `object-position` at both levels: the photo inside the plate (`offset = (plate − photo) × X`) and the plate on the screen (`left: X%; transform: translateX(-X%)`, which is how `background-position` percentages behave). Composed, the photo's point at X% lands X% across every screen width, so whatever is at the edge of the photo stays at the same edge of every screen. Y 100% keeps the bottom of the photo, which is where a horizon usually is.
+
+One plate cannot serve both a phone and a desktop: a 2400 px plate on a 390 px phone shows a sliver. The lab therefore makes two, each with its own width, height, text overlap, position, and zoom, sharing the algorithm and tone so they read as one print:
 
 - **Narrow** (600 / 820 / 1024 px wide), used below its own width.
 - **Wide** (1600 / 2400 / 3200 px), used from there up.
