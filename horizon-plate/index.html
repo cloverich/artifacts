@@ -104,10 +104,11 @@
       <input id="plateH" type="range" min="160" max="720" step="10">
       <label class="row" for="overlap"><span>Text over sky</span><output id="overlapOut"></output></label>
       <input id="overlap" type="range" min="0" max="0.7" step="0.01">
-      <label class="row" for="ax"><span>Crop, left to right</span><output id="axOut"></output></label>
+      <label class="row" for="ax"><span>Position X</span><output id="axOut"></output></label>
       <input id="ax" type="range" min="0" max="1" step="0.01">
-      <label class="row" for="ay"><span>Crop, top to bottom</span><output id="ayOut"></output></label>
+      <label class="row" for="ay"><span>Position Y</span><output id="ayOut"></output></label>
       <input id="ay" type="range" min="0" max="1" step="0.01">
+      <p class="hint">Like CSS <code>object-position</code>: the photo's point at X% sits X% across every screen, so a subject at the edge stays in view. Y 100% keeps the bottom of the photo.</p>
       <label class="row" for="zoom"><span>Zoom</span><output id="zoomOut"></output></label>
       <input id="zoom" type="range" min="1" max="3" step="0.05">
       <div class="seg" id="views"></div>

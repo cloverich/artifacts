@@ -3,8 +3,13 @@
 // photos/*.jpg paths with data URIs. Open dist/horizon-plate.html after
 // `node build.mjs`.
 //
-// The preview is the shipped page: each plate has a fixed CSS width, is
-// centred, and is cropped by the screen. What you see is what Export saves.
+// The preview is the shipped page: each plate has a fixed CSS width and is
+// cropped by the screen. What you see is what Export saves.
+//
+// Position works like CSS object-position at both levels: the photo inside
+// the plate, and the plate inside the screen (left: X%; translateX(-X%)).
+// Composed, the photo's point at X% sits X% across every screen width, so a
+// subject near the edge of the photo stays on screen.
 
 const $ = (id) => document.getElementById(id);
 
@@ -29,7 +34,7 @@ const ALGOS = {
 const PHOTOS = {
   sailboat: { label: "Sailboat", src: "photos/sailboat.jpg", title: "Sailboat under low cloud",
     where: "Salish Sea, Washington, on the way to Orcas Island", camera: "iPhone",
-    crop: { wide: { ax: 0.55, ay: 0.64 }, narrow: { ax: 0.8, ay: 0.78 } } },
+    crop: { wide: { ax: 0.89, ay: 0.9 }, narrow: { ax: 0.89, ay: 1 } } },
   sunset: { label: "Sunset", src: "photos/sunset.jpg", title: "Sunset over Lake Washington",
     where: "Lake Washington, Washington; a mountain range silhouetted on the far horizon", camera: "Mirrorless camera (OM System OM-5 or Sony; model unconfirmed)",
     crop: { wide: { ax: 0.5, ay: 0.98 }, narrow: { ax: 0.6, ay: 1 } } },
@@ -62,8 +67,8 @@ const THEMES = {
 };
 
 const PLATE_DEFAULTS = {
-  wide: { width: 2400, height: 380, overlap: 0.4, ax: 0.5, ay: 0.8, zoom: 1 },
-  narrow: { width: 820, height: 300, overlap: 0.25, ax: 0.5, ay: 0.8, zoom: 1 },
+  wide: { width: 2400, height: 380, overlap: 0.4, ax: 0.5, ay: 1, zoom: 1 },
+  narrow: { width: 820, height: 300, overlap: 0.25, ax: 0.5, ay: 1, zoom: 1 },
 };
 
 const S = {
@@ -80,8 +85,8 @@ const S = {
 };
 const P = () => S.plates[S.plate];
 
-// Choosing a photo also frames it: each has a crop that keeps its subject
-// inside the centre of both plates.
+// Choosing a photo also frames it: each has a position that keeps its
+// subject on screen in both plates.
 function usePhoto(key) {
   S.source = { kind: "photo", key };
   for (const which of ["wide", "narrow"]) Object.assign(S.plates[which], { zoom: 1 }, PHOTOS[key].crop[which]);
@@ -250,7 +255,7 @@ function drawOverview(url, r) {
     ctx.lineWidth = 1;
     const k = w / r.cssW;
     SCREENS[S.plate].filter((s) => s < r.cssW).forEach((s, i) => {
-      const x0 = (w - s * k) / 2, x1 = (w + s * k) / 2, y = h + 4 + (i % 2) * 6;
+      const x0 = P().ax * (w - s * k), x1 = x0 + s * k, y = h + 4 + (i % 2) * 6;
       ctx.beginPath(); ctx.moveTo(x0 + 0.5, h); ctx.lineTo(x0 + 0.5, y); ctx.moveTo(x1 - 0.5, h); ctx.lineTo(x1 - 0.5, y); ctx.stroke();
       ctx.fillText(String(s), x1 + 12, y + 3);
     });
@@ -282,6 +287,7 @@ function snippetText() {
     const e = exported[which];
     return e && e.sig === signature(which) ? `${e.filename}: ${d.cw}×${d.ch}, ${kb(e.bytes)}` : `plate-${which}.${ext}: ${d.cw}×${d.ch}, export to measure`;
   };
+  const pc = (v) => `${+(v * 100).toFixed(1)}%`;
   const pad = (p) => Math.round(p.height * (1 - p.overlap));
   const pix = ALGOS[S.algo].grid ? "\n  image-rendering: pixelated; /* keep dither dots square */" : "";
   return `/* Horizon plate, mobile first. Browsers fetch only the mask that applies.
@@ -294,8 +300,9 @@ function snippetText() {
   content-visibility: auto; contain-intrinsic-size: auto ${Math.round(n.height + 240)}px;
 }
 .site-footer::before {
-  content: ""; position: absolute; left: 50%; bottom: 0; z-index: -1;
-  width: ${dn.cssW}px; height: ${dn.cssH}px; transform: translateX(-50%);
+  content: ""; position: absolute; bottom: 0; z-index: -1;
+  width: ${dn.cssW}px; height: ${dn.cssH}px;
+  left: ${pc(n.ax)}; transform: translateX(-${pc(n.ax)}); /* position X: the photo's ${pc(n.ax)} point sits ${pc(n.ax)} across */
   background: ${S.ink}; /* or var(--ink): colour comes from CSS */
   -webkit-mask: url(plate-narrow.${ext}) 0 0 / 100% 100% no-repeat;
           mask: url(plate-narrow.${ext}) 0 0 / 100% 100% no-repeat;${pix}
@@ -305,6 +312,7 @@ function snippetText() {
   .site-footer { min-height: ${dw.cssH}px; padding-bottom: ${pad(w)}px; contain-intrinsic-size: auto ${Math.round(w.height + 240)}px; }
   .site-footer::before {
     width: ${dw.cssW}px; height: ${dw.cssH}px;
+    left: ${pc(w.ax)}; transform: translateX(-${pc(w.ax)});
     -webkit-mask-image: url(plate-wide.${ext});
             mask-image: url(plate-wide.${ext});
   }
@@ -415,6 +423,7 @@ function paintSite() {
   site.style.setProperty("--p-font", th.font);
   site.style.setProperty("--plate-h", p.height + "px");
   site.style.setProperty("--overlap", p.overlap);
+  site.style.setProperty("--x", p.ax);
   site.dataset.screen = S.plate;
 }
 

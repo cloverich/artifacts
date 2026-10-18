@@ -63,9 +63,11 @@ body {
   padding: 48px clamp(20px, 5vw, 56px) calc(var(--plate-h) * (1 - var(--overlap)));
   min-height: var(--plate-h);
 }
-/* Fixed CSS width, centred, cropped by the screen: the shipped geometry. */
+/* Fixed CSS width, placed like background-position (X% of the plate on X%
+   of the screen), cropped by the screen: the shipped geometry. */
 .plate, .inspect {
-  position: absolute; left: 50%; bottom: 0; transform: translateX(-50%); z-index: -1; pointer-events: none; max-width: none;
+  position: absolute; bottom: 0; z-index: -1; pointer-events: none; max-width: none;
+  left: calc(var(--x, 0.5) * 100%); transform: translateX(calc(var(--x, 0.5) * -100%));
 }
 .plate {
   background: var(--p-ink);
