@@ -84,6 +84,16 @@ test("tone: the ink floor leaves the sky empty and the dissolve clears the top r
   assert.ok(faded.subarray(0, w).every((v) => v === 0), "first row dissolved");
 });
 
+test("tone: zoomed out, no ink outside the photo and its sides dissolve", () => {
+  const w = 40, h = 20, lum = Float32Array.from({ length: w * h }, (_, i) => (i / w < 12 ? 0.9 : 0.1));
+  const t = tone(lum, w, h, { contrast: 1, gamma: 1, lift: 0, fade: 0, sides: 0.25, inkLight: false, rect: [10, 5, 30, 20] });
+  assert.equal(t[2 * w + 20], 0, "above the photo");
+  assert.equal(t[10 * w + 5], 0, "left of the photo");
+  assert.equal(t[16 * w + 10], 0, "the side ramp starts at zero");
+  assert.ok(t[16 * w + 20] > 0.9, "middle of the dark ground is inked");
+  assert.ok(t[16 * w + 12] < t[16 * w + 20], "the side ramp thins ink");
+});
+
 test("error diffusion preserves mean tone; Atkinson drops a faint field entirely", () => {
   const n = 64, g = new Float32Array(n * n).fill(0.3);
   assert.ok(Math.abs(mean(diffuse(g, n, n, "fs"), 255) - 0.3) < 0.01);

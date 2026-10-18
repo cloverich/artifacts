@@ -79,7 +79,7 @@ const S = {
   algo: "diffuse",
   sizes: Object.fromEntries(Object.entries(ALGOS).map(([k, a]) => [k, a.init || 0])),
   field: "wave", hatch: true, angle: 45, kernel: "atkinson",
-  inkLight: false, lift: 0.12, fade: 0.25, contrast: 1, gamma: 1,
+  inkLight: false, lift: 0.12, fade: 0.25, sides: 0, contrast: 1, gamma: 1,
   tab: "footer", bits: "auto", format: "png",
   bg: "", ink: "",
 };
@@ -109,22 +109,26 @@ const sourceImage = () => (S.source.kind === "file" ? Promise.resolve(S.source.i
 const sourceId = () => (S.source.kind === "file" ? "file:" + S.source.name : "photo:" + S.source.key);
 
 // Cover-crop the source into the plate frame (W×H compute px), zoomed and
-// anchored, and take Rec. 709 luminance.
-let lumCache = { key: "", lum: null };
+// anchored, and take Rec. 709 luminance. Zoom below 1 shrinks the photo
+// past cover, so it no longer fills the frame; `rect` is the part it covers.
+let lumCache = { key: "", lum: null, rect: null };
 function luminance(src, W, H, p, cache = true) {
   const key = `${sourceId()}|${W}|${H}|${p.ax}|${p.ay}|${p.zoom}`;
-  if (cache && lumCache.key === key) return lumCache.lum;
+  if (cache && lumCache.key === key) return lumCache;
   const sw = src.naturalWidth || src.width, sh = src.naturalHeight || src.height;
   const c = document.createElement("canvas");
   c.width = W; c.height = H;
   const ctx = c.getContext("2d", { willReadFrequently: true });
   const k = Math.max(W / sw, H / sh) * p.zoom, dw = sw * k, dh = sh * k;
   ctx.imageSmoothingQuality = "high";
-  ctx.drawImage(src, (W - dw) * p.ax, (H - dh) * p.ay, dw, dh);
+  const ox = (W - dw) * p.ax, oy = (H - dh) * p.ay;
+  ctx.drawImage(src, ox, oy, dw, dh);
+  const rect = [Math.max(0, Math.ceil(ox)), Math.max(0, Math.ceil(oy)), Math.min(W, Math.floor(ox + dw)), Math.min(H, Math.floor(oy + dh))];
   const px = ctx.getImageData(0, 0, W, H).data, lum = new Float32Array(W * H);
   for (let i = 0, q = 0; i < lum.length; i++, q += 4) lum[i] = (0.2126 * px[q] + 0.7152 * px[q + 1] + 0.0722 * px[q + 2]) / 255;
-  if (cache) lumCache = { key, lum };
-  return lum;
+  const r = { key, lum, rect };
+  if (cache) lumCache = r;
+  return r;
 }
 
 // ── Pipeline ─────────────────────────────────────────────────────────────
@@ -139,9 +143,9 @@ function compute(src, p, scale, cache = true) {
   const W = a.grid ? Math.ceil(p.width * scale) : Math.max(1, Math.round(p.width * scale));
   const H = a.grid ? Math.ceil(p.height * scale) : Math.max(1, Math.round(p.height * scale));
   const ms = {}, t0 = performance.now();
-  const lum = luminance(src, W, H, p, cache);
+  const { lum, rect } = luminance(src, W, H, p, cache);
   const t1 = performance.now();
-  const t = tone(lum, W, H, { contrast: S.contrast, gamma: S.gamma, lift: S.lift, fade: S.fade, inkLight: S.inkLight });
+  const t = tone(lum, W, H, { contrast: S.contrast, gamma: S.gamma, lift: S.lift, fade: S.fade, sides: S.sides, inkLight: S.inkLight, rect });
   const t2 = performance.now();
   let cov;
   if (a.grid) cov = diffuse(t, W, H, S.kernel);
@@ -292,22 +296,28 @@ function drawSource() {
   sourceImage().then((src) => {
     if (S.tab !== "image") return;
     const c = $("source"), p = P(), sw = src.naturalWidth || src.width, sh = src.naturalHeight || src.height;
+    // The frame in photo pixels: the inverse of the fit in luminance(). Zoomed
+    // out, the frame is bigger than the photo, so fit the union of the two.
+    const k = Math.max(p.width / sw, p.height / sh) * p.zoom, dw = sw * k, dh = sh * k;
+    const fx = -((p.width - dw) * p.ax) / k, fy = -((p.height - dh) * p.ay) / k, fw = p.width / k, fh = p.height / k;
+    const ux = Math.min(0, fx), uy = Math.min(0, fy), uw = Math.max(sw, fx + fw) - ux, uh = Math.max(sh, fy + fh) - uy;
     const dpr = window.devicePixelRatio || 1, maxW = c.parentElement.clientWidth;
-    const w = Math.round(Math.min(maxW, (innerHeight * 0.55 * sw) / sh)), h = Math.round((w * sh) / sw);
+    const f = Math.min(maxW / uw, (innerHeight * 0.55) / uh), w = Math.round(uw * f), h = Math.round(uh * f);
     c.width = w * dpr; c.height = h * dpr;
     c.style.width = `${w}px`; c.style.height = `${h}px`;
     const ctx = c.getContext("2d");
     ctx.scale(dpr, dpr);
-    ctx.drawImage(src, 0, 0, w, h);
-    // The frame in photo pixels: the inverse of the cover fit in luminance().
-    const k = Math.max(p.width / sw, p.height / sh) * p.zoom, dw = sw * k, dh = sh * k;
-    const f = w / sw, fx = (-(p.width - dw) * p.ax / k) * f, fy = (-(p.height - dh) * p.ay / k) * f, fw = (p.width / k) * f, fh = (p.height / k) * f;
+    ctx.translate(-ux * f, -uy * f);
+    ctx.drawImage(src, 0, 0, sw * f, sh * f);
+    ctx.save();
+    ctx.beginPath(); ctx.rect(0, 0, sw * f, sh * f); ctx.clip();
+    ctx.beginPath(); ctx.rect(0, 0, sw * f, sh * f); ctx.rect(fx * f, fy * f, fw * f, fh * f);
     ctx.fillStyle = "rgba(0,0,0,0.55)";
-    ctx.fillRect(0, 0, w, fy); ctx.fillRect(0, fy + fh, w, h - fy - fh);
-    ctx.fillRect(0, fy, fx, fh); ctx.fillRect(fx + fw, fy, w - fx - fw, fh);
-    ctx.strokeStyle = "#fff";
+    ctx.fill("evenodd");
+    ctx.restore();
+    ctx.strokeStyle = getComputedStyle(document.documentElement).getPropertyValue("--accent").trim();
     ctx.lineWidth = 1.5;
-    ctx.strokeRect(fx + 0.75, fy + 0.75, fw - 1.5, fh - 1.5);
+    ctx.strokeRect(fx * f + 0.75, fy * f + 0.75, fw * f - 1.5, fh * f - 1.5);
   });
 }
 
@@ -339,7 +349,7 @@ function setPanel(open) {
 
 // ── Export ───────────────────────────────────────────────────────────────
 const exported = { wide: null, narrow: null };
-const signature = (which) => JSON.stringify([sourceId(), S.plates[which], S.algo, S.sizes[S.algo], S.field, S.hatch, S.angle, S.kernel, S.inkLight, S.lift, S.fade, S.contrast, S.gamma, S.bits, S.format, S.ink]);
+const signature = (which) => JSON.stringify([sourceId(), S.plates[which], S.algo, S.sizes[S.algo], S.field, S.hatch, S.angle, S.kernel, S.inkLight, S.lift, S.fade, S.sides, S.contrast, S.gamma, S.bits, S.format, S.ink]);
 
 function plateDims(which) {
   const a = ALGOS[S.algo], p = S.plates[which], s = a.grid ? gridScale() : a.exportScale;
@@ -451,7 +461,7 @@ async function copyText(text, btn, label) {
 // chat or a commit where a 1-bit PNG would be re-encoded, and with the
 // source photo it reproduces both exports exactly (paste it here, or call
 // applyRecipe() headless). The photo itself is referenced by name only.
-const RECIPE_KEYS = ["theme", "algo", "field", "hatch", "angle", "kernel", "inkLight", "lift", "fade", "contrast", "gamma", "bits", "format", "bg", "ink"];
+const RECIPE_KEYS = ["theme", "algo", "field", "hatch", "angle", "kernel", "inkLight", "lift", "fade", "sides", "contrast", "gamma", "bits", "format", "bg", "ink"];
 function recipe() {
   const r = { horizonPlate: 1, source: S.source.kind === "photo" ? S.source.key : S.source.name.split(":")[0] };
   for (const k of RECIPE_KEYS) r[k] = S[k];
@@ -499,7 +509,7 @@ function applyTheme(key) {
   const th = THEMES[key];
   S.theme = key;
   S.bg = th.bg; S.ink = th.ink;
-  Object.assign(S, { algo: th.algo, inkLight: th.inkLight, lift: th.lift, fade: th.fade, contrast: th.contrast, gamma: th.gamma });
+  Object.assign(S, { algo: th.algo, inkLight: th.inkLight, lift: th.lift, fade: th.fade, sides: th.sides || 0, contrast: th.contrast, gamma: th.gamma });
   if (th.size) S.sizes[th.algo] = th.size;
   for (const k of ["field", "hatch", "angle", "kernel"]) if (k in th) S[k] = th[k];
   S.plates = structuredClone(PLATE_DEFAULTS);
@@ -575,6 +585,7 @@ function initControls() {
   range("angle", () => S.angle, (v) => (S.angle = v), (v) => `${v}°`);
   range("lift", () => S.lift, (v) => (S.lift = v), pct);
   range("fade", () => S.fade, (v) => (S.fade = v), pct);
+  range("sides", () => S.sides, (v) => (S.sides = v), pct);
   range("contrast", () => S.contrast, (v) => (S.contrast = v), (v) => v.toFixed(2));
   range("gamma", () => S.gamma, (v) => (S.gamma = v), (v) => v.toFixed(2));
   range("plateH", () => P().height, (v) => (P().height = v), (v) => `${v} px`);

@@ -100,6 +100,8 @@
       <input id="lift" type="range" min="0" max="0.6" step="0.01">
       <label class="row" for="fade"><span>Dissolve top</span><output id="fadeOut"></output></label>
       <input id="fade" type="range" min="0" max="0.7" step="0.01">
+      <label class="row" for="sides"><span>Dissolve sides</span><output id="sidesOut"></output></label>
+      <input id="sides" type="range" min="0" max="0.5" step="0.01">
       <label class="row" for="contrast"><span>Contrast</span><output id="contrastOut"></output></label>
       <input id="contrast" type="range" min="0.5" max="2" step="0.05">
       <label class="row" for="gamma"><span>Gamma</span><output id="gammaOut"></output></label>
@@ -112,7 +114,7 @@
       <label class="row-1" for="plateW"><span>Width</span><select id="plateW"></select></label>
       <p class="hint" id="screenNote"></p>
       <label class="row" for="plateH"><span>Height</span><output id="plateHOut"></output></label>
-      <input id="plateH" type="range" min="160" max="720" step="10">
+      <input id="plateH" type="range" min="160" max="1000" step="10">
       <label class="row" for="overlap"><span>Text overlap</span><output id="overlapOut"></output></label>
       <input id="overlap" type="range" min="0" max="0.7" step="0.01">
       <label class="row" for="ax"><span>Position X</span><output id="axOut"></output></label>
@@ -121,7 +123,8 @@
       <input id="ay" type="range" min="0" max="1" step="0.01">
       <p class="hint">Like CSS <code>object-position</code>: the photo's point at X% sits X% across every screen, so a subject at the edge stays in view. Y 100% keeps the bottom of the photo.</p>
       <label class="row" for="zoom"><span>Zoom</span><output id="zoomOut"></output></label>
-      <input id="zoom" type="range" min="1" max="3" step="0.05">
+      <input id="zoom" type="range" min="0.2" max="3" step="0.05">
+      <p class="hint">Below 1× the photo no longer fills the image: the rest is page. Dissolve sides (Tone) fades its edges, and the top dissolve starts at its top edge.</p>
     </fieldset>
 
     <fieldset>

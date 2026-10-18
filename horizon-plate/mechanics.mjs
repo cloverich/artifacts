@@ -14,17 +14,24 @@ const clamp01 = (v) => (v < 0 ? 0 : v > 1 ? 1 : v);
 // (ink below this is dropped, so the sky goes clean and meets the page
 // colour exactly), and a vertical fade that thins the ink itself rather than
 // the opacity, so a dither dissolves dot by dot into the page.
+//
+// o.rect = [x0, y0, x1, y1] is the part of the frame the photo covers (the
+// whole frame unless zoomed out past cover). Outside it there is no ink;
+// levels are measured inside it; the top dissolve starts at its top edge and
+// o.sides dissolves its left and right edges by the same ramp.
 export function tone(lum, w, h, o) {
+  const [x0, y0, x1, y1] = o.rect || [0, 0, w, h];
   const hist = new Uint32Array(256);
-  for (let i = 0; i < lum.length; i++) hist[(lum[i] * 255) | 0]++;
+  let n = 0;
+  for (let y = y0; y < y1; y++) for (let x = x0, i = y * w + x0; x < x1; x++, i++, n++) hist[(lum[i] * 255) | 0]++;
   const pct = (q) => {
     let acc = 0;
-    for (let v = 0; v < 256; v++) if ((acc += hist[v]) >= lum.length * q) return v / 255;
+    for (let v = 0; v < 256; v++) if ((acc += hist[v]) >= n * q) return v / 255;
     return 1;
   };
   const lo = pct(0.005), range = Math.max(1 / 255, pct(0.995) - lo);
-  // Everything but the dissolve depends on luminance alone: tabulate it once
-  // (4096 bins, finer than any 8-bit source) instead of a pow per pixel.
+  // Everything but the dissolves depends on luminance alone: tabulate it
+  // once (4096 bins, finer than any 8-bit source) instead of a pow per pixel.
   const N = 4096, lut = new Float32Array(N + 1);
   for (let k = 0; k <= N; k++) {
     let t = clamp01((k / N - lo) / range);
@@ -33,11 +40,16 @@ export function tone(lum, w, h, o) {
     t = t <= o.lift ? 0 : (t - o.lift) / (1 - o.lift);
     lut[k] = Math.pow(t, o.gamma);
   }
-  const fadeRows = Math.round(h * o.fade);
+  const fadeRows = Math.round((y1 - y0) * o.fade), sideCols = Math.round((x1 - x0) * (o.sides || 0));
+  const side = new Float32Array(w);
+  for (let x = x0; x < x1; x++) {
+    const d = Math.min(x - x0, x1 - 1 - x);
+    side[x] = sideCols > 0 && d < sideCols ? smooth(d / sideCols) : 1;
+  }
   const out = new Float32Array(w * h);
-  for (let y = 0; y < h; y++) {
-    const f = fadeRows > 0 && y < fadeRows ? smooth(y / fadeRows) : 1;
-    for (let x = 0, i = y * w; x < w; x++, i++) out[i] = lut[(lum[i] * N + 0.5) | 0] * f;
+  for (let y = y0; y < y1; y++) {
+    const f = fadeRows > 0 && y - y0 < fadeRows ? smooth((y - y0) / fadeRows) : 1;
+    for (let x = x0, i = y * w + x0; x < x1; x++, i++) out[i] = lut[(lum[i] * N + 0.5) | 0] * f * side[x];
   }
   return out;
 }
