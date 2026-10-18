@@ -23,18 +23,21 @@ export function tone(lum, w, h, o) {
     return 1;
   };
   const lo = pct(0.005), range = Math.max(1 / 255, pct(0.995) - lo);
+  // Everything but the dissolve depends on luminance alone: tabulate it once
+  // (4096 bins, finer than any 8-bit source) instead of a pow per pixel.
+  const N = 4096, lut = new Float32Array(N + 1);
+  for (let k = 0; k <= N; k++) {
+    let t = clamp01((k / N - lo) / range);
+    t = clamp01((t - 0.5) * o.contrast + 0.5);
+    if (!o.inkLight) t = 1 - t;
+    t = t <= o.lift ? 0 : (t - o.lift) / (1 - o.lift);
+    lut[k] = Math.pow(t, o.gamma);
+  }
   const fadeRows = Math.round(h * o.fade);
   const out = new Float32Array(w * h);
   for (let y = 0; y < h; y++) {
     const f = fadeRows > 0 && y < fadeRows ? smooth(y / fadeRows) : 1;
-    for (let x = 0; x < w; x++) {
-      const i = y * w + x;
-      let t = clamp01((lum[i] - lo) / range);
-      t = clamp01((t - 0.5) * o.contrast + 0.5);
-      if (!o.inkLight) t = 1 - t;
-      t = t <= o.lift ? 0 : (t - o.lift) / (1 - o.lift);
-      out[i] = Math.pow(t, o.gamma) * f;
-    }
+    for (let x = 0, i = y * w; x < w; x++, i++) out[i] = lut[(lum[i] * N + 0.5) | 0] * f;
   }
   return out;
 }
@@ -115,12 +118,16 @@ export function halftone(t, w, h, o) {
   const s = o.pitch, out = new Uint8Array(w * h);
   const ca = Math.cos(o.angle), sa = Math.sin(o.angle);
   const k = (2 * Math.PI) / s, edge = s / 4.4; // ≈ 1/|∇f| per pixel
+  // u and v are sums of an x term and a y term, so cos u and cos v expand
+  // by the angle-sum identity into per-column and per-row tables.
+  const tab = (n, f) => { const c = new Float32Array(n), sn = new Float32Array(n); for (let i = 0; i < n; i++) { c[i] = Math.cos(f * i); sn[i] = Math.sin(f * i); } return [c, sn]; };
+  const [cxu, sxu] = tab(w, ca * k), [cyu, syu] = tab(h, sa * k), [cxv, sxv] = tab(w, sa * k), [cyv, syv] = tab(h, ca * k);
   for (let y = 0; y < h; y++)
     for (let x = 0; x < w; x++) {
       const i = y * w + x, ti = t[i];
       if (ti <= 0) continue;
-      const u = (x * ca + y * sa) * k, v = (-x * sa + y * ca) * k;
-      const f = 0.5 * (Math.cos(u) + Math.cos(v));
+      // cos(xa + yb) = cos xa cos yb − sin xa sin yb; v has −x·sa, so its sign flips.
+      const f = 0.5 * (cxu[x] * cyu[y] - sxu[x] * syu[y] + cxv[x] * cyv[y] + sxv[x] * syv[y]);
       out[i] = cov((f - (1 - 2 * ti)) * edge + 0.5);
     }
   return out;
