@@ -103,6 +103,8 @@ legend, .readout, .hint, .row, .seg button, .snippet, .drop, .check, .swatches, 
   border-top: 1px solid var(--p-rule); font-size: 0.8rem; color: var(--p-muted);
 }
 
+.foot-credit { margin: 10px 0 0; font-size: 0.72rem; color: var(--p-muted); opacity: 0.8; max-width: 60ch; }
+input[type="text"] { font: 0.78rem var(--mono); color: var(--fg); background: var(--bg); border: 1px solid var(--rule); border-radius: 0; padding: 5px 6px; width: 100%; min-width: 0; }
 .overview { display: block; width: 100%; }
 .readout { color: var(--muted); padding-top: 8px; font-variant-numeric: tabular-nums; min-height: 3em; }
 .readout b { color: var(--fg); font-weight: 500; }

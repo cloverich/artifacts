@@ -81,7 +81,7 @@ const S = {
   field: "wave", hatch: true, angle: 45, kernel: "atkinson",
   inkLight: false, lift: 0.12, fade: 0.25, sides: 0, contrast: 1, gamma: 1,
   tab: "footer", bits: "auto", format: "png",
-  bg: "", ink: "",
+  bg: "", ink: "", credit: "",
 };
 const P = () => S.plates[S.plate];
 
@@ -461,7 +461,7 @@ async function copyText(text, btn, label) {
 // chat or a commit where a 1-bit PNG would be re-encoded, and with the
 // source photo it reproduces both exports exactly (paste it here, or call
 // applyRecipe() headless). The photo itself is referenced by name only.
-const RECIPE_KEYS = ["theme", "algo", "field", "hatch", "angle", "kernel", "inkLight", "lift", "fade", "sides", "contrast", "gamma", "bits", "format", "bg", "ink"];
+const RECIPE_KEYS = ["theme", "algo", "field", "hatch", "angle", "kernel", "inkLight", "lift", "fade", "sides", "contrast", "gamma", "bits", "format", "bg", "ink", "credit"];
 function recipe() {
   const r = { horizonPlate: 1, source: S.source.kind === "photo" ? S.source.key : S.source.name.split(":")[0] };
   for (const k of RECIPE_KEYS) r[k] = S[k];
@@ -529,6 +529,8 @@ function paintSite() {
   site.style.setProperty("--overlap", p.overlap);
   site.style.setProperty("--x", p.ax);
   site.dataset.screen = S.plate;
+  $("footCredit").textContent = S.credit;
+  $("footCredit").hidden = !S.credit;
 }
 
 function sync() {
@@ -549,6 +551,7 @@ function sync() {
   $("bg").value = S.bg;
   $("ink").value = S.ink;
   $("bits").value = S.bits;
+  $("credit").value = S.credit;
   $("format").value = S.format;
   const wsel = $("plateW");
   wsel.innerHTML = "";
@@ -601,6 +604,7 @@ function initControls() {
   themeSel.addEventListener("change", () => { applyTheme(themeSel.value); sync(); schedule(); });
   $("bg").addEventListener("input", (e) => { S.bg = e.target.value; paintSite(); if (S.tab === "image") repaintSoon(); });
   $("ink").addEventListener("input", (e) => { S.ink = e.target.value; paintSite(); repaintSoon(); });
+  $("credit").addEventListener("input", (e) => { S.credit = e.target.value; paintSite(); });
   $("bits").addEventListener("change", (e) => { S.bits = e.target.value; schedule(); });
   $("format").addEventListener("change", (e) => { S.format = e.target.value; schedule(); });
   $("plateW").addEventListener("change", (e) => { P().width = +e.target.value; sync(); schedule(); });
