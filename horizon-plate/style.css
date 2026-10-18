@@ -142,6 +142,7 @@ input[type="color"] { width: 44px; height: 24px; padding: 0; border: 1px solid v
 .actions { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
 .actions button { padding: 8px; border: 1px solid var(--fg); background: var(--fg); color: var(--bg); cursor: pointer; border-radius: 0; }
 .actions button + button { background: transparent; color: var(--fg); }
+.actions button:nth-child(3) { grid-column: 1 / -1; }
 .actions button:disabled { opacity: 0.5; cursor: progress; }
 .snippet { margin: 0; padding: 8px; max-height: 180px; overflow: auto; background: var(--bg); border: 1px solid var(--rule); white-space: pre; line-height: 1.45; }
 

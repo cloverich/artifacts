@@ -431,19 +431,45 @@ async function exportPlate() {
   }
 }
 
-async function copyCSS() {
+async function copyText(text, btn, label) {
   try {
-    await navigator.clipboard.writeText($("snippet").textContent);
-    $("copy").textContent = "Copied";
+    await navigator.clipboard.writeText(text);
+    btn.textContent = "Copied";
   } catch {
+    // No clipboard permission: show the text selected, ready to copy by hand.
+    $("snippet").textContent = text;
     const range = document.createRange();
     range.selectNodeContents($("snippet"));
     getSelection().removeAllRanges();
     getSelection().addRange(range);
-    $("copy").textContent = "Selected";
+    btn.textContent = "Selected";
   }
-  setTimeout(() => ($("copy").textContent = "Copy CSS"), 1400);
+  setTimeout(() => (btn.textContent = label), 1400);
 }
+
+// Recipe: every setting that shapes the plates, as JSON. Text survives a
+// chat or a commit where a 1-bit PNG would be re-encoded, and with the
+// source photo it reproduces both exports exactly (paste it here, or call
+// applyRecipe() headless). The photo itself is referenced by name only.
+const RECIPE_KEYS = ["theme", "algo", "field", "hatch", "angle", "kernel", "inkLight", "lift", "fade", "contrast", "gamma", "bits", "format", "bg", "ink"];
+function recipe() {
+  const r = { horizonPlate: 1, source: S.source.kind === "photo" ? S.source.key : S.source.name.split(":")[0] };
+  for (const k of RECIPE_KEYS) r[k] = S[k];
+  r.size = S.sizes[S.algo];
+  r.plates = structuredClone(S.plates);
+  return r;
+}
+function applyRecipe(r) {
+  if (!r || r.horizonPlate !== 1) return false;
+  if (r.theme in THEMES) S.theme = r.theme;
+  if (r.algo in ALGOS) for (const k of RECIPE_KEYS) if (k in r) S[k] = r[k];
+  if (r.size) S.sizes[S.algo] = r.size;
+  for (const which of ["wide", "narrow"]) Object.assign(S.plates[which], r.plates?.[which]);
+  if (r.source in PHOTOS && S.source.kind === "photo") S.source = { kind: "photo", key: r.source };
+  sync(); schedule();
+  return true;
+}
+window.applyRecipe = applyRecipe;
 
 // ── Controls ─────────────────────────────────────────────────────────────
 const segs = [], ranges = [];
@@ -570,7 +596,8 @@ function initControls() {
   $("download").addEventListener("click", exportPlate);
   document.querySelectorAll(".tabs button").forEach((b) => b.addEventListener("click", () => setTab(b.dataset.tab)));
   $("togglePanel").addEventListener("click", () => setPanel($("panel").hidden));
-  $("copy").addEventListener("click", copyCSS);
+  $("copy").addEventListener("click", () => copyText(snippetText(), $("copy"), "Copy CSS"));
+  $("copyRecipe").addEventListener("click", () => copyText(JSON.stringify(recipe(), null, 1), $("copyRecipe"), "Copy recipe"));
 
   // Image input: file picker, drag and drop anywhere on the bench, paste.
   const load = (file) => {
@@ -597,7 +624,9 @@ function initControls() {
   }
   window.addEventListener("paste", (e) => {
     const item = [...(e.clipboardData?.items || [])].find((i) => i.type.startsWith("image/"));
-    if (item) load(item.getAsFile());
+    if (item) return load(item.getAsFile());
+    if (e.target.closest?.("input, select, textarea")) return;
+    try { if (applyRecipe(JSON.parse(e.clipboardData.getData("text")))) $("exportNote").textContent = "Recipe applied. Drop the matching photo if it is your own."; } catch {}
   });
   $("panel").addEventListener("pointerdown", (e) => { if (e.target.type === "range") dragging = true; });
   window.addEventListener("pointerup", () => { if (dragging) { dragging = false; schedule(); } });
