@@ -2,7 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { inflateSync, deflateSync } from "node:zlib";
 const require_deflate = (b) => deflateSync(Buffer.from(b)).length;
-import { crc32, encodePNG, packRows, filterRows, quantize, tone, downsample, engrave, halftone, bayer, diffuse, mezzotint, BAYER8 } from "./mechanics.mjs";
+import { crc32, encodePNG, packRows, filterRows, quantize, tone, downsample, engrave, halftone, diffuse, BAYER8 } from "./mechanics.mjs";
 
 const mean = (a, scale = 1) => a.reduce((s, v) => s + v, 0) / a.length / scale;
 
@@ -87,8 +87,6 @@ test("tone: the ink floor leaves the sky empty and the dissolve clears the top r
 test("error diffusion preserves mean tone; Atkinson drops a faint field entirely", () => {
   const n = 64, g = new Float32Array(n * n).fill(0.3);
   assert.ok(Math.abs(mean(diffuse(g, n, n, "fs"), 255) - 0.3) < 0.01);
-  assert.ok(Math.abs(mean(bayer(g, n, n), 255) - 0.3) < 0.02);
-  assert.ok(Math.abs(mean(mezzotint(g, n, n), 255) - 0.3) < 0.03);
   const faint = new Float32Array(n * n).fill(0.05);
   assert.ok(mean(diffuse(faint, n, n, "atkinson"), 255) < mean(diffuse(faint, n, n, "fs"), 255));
 });

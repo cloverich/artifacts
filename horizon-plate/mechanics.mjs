@@ -6,11 +6,6 @@
 // (Uint8 coverage 0..255) → quantize → indexed PNG. Ink colour never enters
 // the pipeline; CSS applies it, so one mask serves every theme of a polarity.
 
-const hash2 = (x, y, s) => {
-  let h = (x * 374761393 + y * 668265263 + s * 2147483647) | 0;
-  h = Math.imul(h ^ (h >>> 13), 1274126177);
-  return ((h ^ (h >>> 16)) >>> 0) / 4294967296;
-};
 const smooth = (t) => t * t * (3 - 2 * t);
 const clamp01 = (v) => (v < 0 ? 0 : v > 1 ? 1 : v);
 
@@ -45,7 +40,7 @@ export function tone(lum, w, h, o) {
 }
 
 // Box-average ink onto a coarser grid: the dot grid of block algorithms
-// (cw × ch device pixels per cell; ASCII cells are taller than wide).
+// (cw × ch device pixels per cell).
 export function downsample(t, w, h, cw, ch = cw) {
   const gw = Math.ceil(w / cw), gh = Math.ceil(h / ch);
   const g = new Float32Array(gw * gh);
@@ -131,20 +126,14 @@ export function halftone(t, w, h, o) {
   return out;
 }
 
-// Bayer 8×8, built recursively; values are the classic 0..63 order.
+// Bayer 8×8, built recursively; values are the classic 0..63 order. Used
+// only as the ordered offset in quantize.
 export const BAYER8 = (() => {
   let m = [[0]];
   for (let n = 1; n < 8; n *= 2)
     m = [...m.map((r) => [...r.map((v) => 4 * v), ...r.map((v) => 4 * v + 2)]), ...m.map((r) => [...r.map((v) => 4 * v + 3), ...r.map((v) => 4 * v + 1)])];
   return m.flat();
 })();
-
-export function bayer(g, gw, gh) {
-  const out = new Uint8Array(gw * gh);
-  for (let y = 0; y < gh; y++)
-    for (let x = 0; x < gw; x++) out[y * gw + x] = g[y * gw + x] > (BAYER8[(y & 7) * 8 + (x & 7)] + 0.5) / 64 ? 255 : 0;
-  return out;
-}
 
 // Error diffusion. Floyd–Steinberg (serpentine) keeps all the error, so
 // tone is preserved; Atkinson spreads only 6/8 of it, which drops the
@@ -170,15 +159,6 @@ export function diffuse(g, gw, gh, kernel) {
   return out;
 }
 
-// Mezzotint: threshold against random noise. Grain with no structure: the
-// look of a rocker-grounded plate, or of film grain at one bit.
-export function mezzotint(g, gw, gh, seed = 1) {
-  const out = new Uint8Array(gw * gh);
-  for (let y = 0; y < gh; y++)
-    for (let x = 0; x < gw; x++) out[y * gw + x] = g[y * gw + x] > hash2(x, y, seed) ? 255 : 0;
-  return out;
-}
-
 // Scanline: fixed-width rows whose intensity (not width) carries tone. Reads
 // as a display, not a print; needs grey levels, so it costs bits.
 export function scanline(t, w, h, o) {
@@ -189,13 +169,6 @@ export function scanline(t, w, h, o) {
     if (lineCov <= 0) continue;
     for (let x = 0; x < w; x++) out[y * w + x] = cov(t[y * w + x] * lineCov);
   }
-  return out;
-}
-
-export const ASCII_RAMP = " .,:;-=+*#%@";
-export function asciiCells(g, gw, gh) {
-  const n = ASCII_RAMP.length - 1, out = new Uint8Array(gw * gh);
-  for (let i = 0; i < g.length; i++) out[i] = Math.min(n, Math.round(g[i] * n));
   return out;
 }
 

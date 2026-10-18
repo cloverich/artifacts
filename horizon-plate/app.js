@@ -8,24 +8,20 @@
 
 const $ = (id) => document.getElementById(id);
 
-// scale: compute pixels per CSS pixel. Dithers compute at 1 (one cell per
-// dot, pixelated on screen); lines at 2 for export; the ink map at ½, since
-// continuous tone scales up smoothly and costs 4× fewer pixels.
+// scale: compute pixels per CSS pixel. Lines and screens compute at 2 for
+// export; the dither computes on its dot grid (one cell per dot, pixelated
+// on screen); the ink map at ½, since continuous tone scales up smoothly and
+// costs 4× fewer pixels. Mark sizes are CSS px and run down to one device
+// pixel on a 2× screen; the default sits near the fine end.
 const ALGOS = {
-  engrave: { label: "Engrave", size: [2, 8, 0.5], sizeLabel: "Line pitch", bits: 1, exportScale: 2,
+  engrave: { label: "Engrave", size: [1, 6, 0.25], init: 2, sizeLabel: "Line pitch", bits: 1, exportScale: 2,
     note: "Line width carries tone. Intaglio, banknotes, toile." },
-  halftone: { label: "Halftone", size: [2, 10, 0.5], sizeLabel: "Screen pitch", bits: 1, exportScale: 2,
+  halftone: { label: "Halftone", size: [1.5, 8, 0.25], init: 2.5, sizeLabel: "Screen pitch", bits: 1, exportScale: 2,
     note: "Dot area carries tone on a rotated screen. Newsprint." },
-  bayer: { label: "Bayer", size: [1, 4, 1], sizeLabel: "Dot", bits: 1, grid: true, exportScale: 1,
-    note: "Ordered 8×8 threshold. A visible crosshatch; early screens." },
-  diffuse: { label: "Diffuse", size: [1, 4, 1], sizeLabel: "Dot", bits: 1, grid: true, exportScale: 1,
-    note: "Error diffusion. Organic grain that preserves tone." },
-  mezzotint: { label: "Mezzotint", size: [1, 4, 1], sizeLabel: "Grain", bits: 1, grid: true, exportScale: 1,
-    note: "Random threshold. Pure grain, no structure." },
-  scanline: { label: "Scanline", size: [2, 8, 0.5], sizeLabel: "Row pitch", bits: 4, exportScale: 2,
+  diffuse: { label: "Diffuse", size: [0.5, 3, 0.5], init: 1, sizeLabel: "Dot", bits: 1, grid: true,
+    note: "Error diffusion. Organic grain that preserves tone. Dots under 1 px need a 2× screen." },
+  scanline: { label: "Scanline", size: [1, 6, 0.25], init: 1.5, sizeLabel: "Row pitch", bits: 4, exportScale: 2,
     note: "Fixed rows whose brightness carries tone. Needs grey levels, so it costs bytes." },
-  ascii: { label: "ASCII", size: [5, 14, 1], sizeLabel: "Glyph width", bits: 1, exportScale: 2,
-    note: "Cell brightness picks a glyph from “ .,:;-=+*#%@”." },
   inkmap: { label: "Ink map", size: null, bits: 8, exportScale: 0.5, fixedScale: 0.5,
     note: "Continuous ink, no marks: the tone curve itself. Ships at half resolution; soft tone scales up cleanly." },
 };
@@ -45,19 +41,20 @@ const PHOTOS = {
 const SERIF = '"Iowan Old Style", "Palatino Linotype", Palatino, Georgia, serif';
 const SANS = 'system-ui, -apple-system, "Segoe UI", Roboto, sans-serif';
 
-// Presets. The first three follow the reference footers; the rest are the
+// Presets. The first three follow the reference footers (the grey grain
+// stands in for the Finance footer's mezzotint); the rest are the
 // two destinations, xylo and pinecoder.dev, in each of their modes.
 const THEMES = {
   toile: { label: "Toile · cream and cobalt", bg: "#f5f1e6", text: "#22328a", muted: "#56609a", ink: "#2747c4", rule: "#d8d1bd", font: SERIF,
-    photo: "sunset", algo: "engrave", size: 3, field: "wave", hatch: true, inkLight: false, lift: 0.4, fade: 0.2, contrast: 1.3, gamma: 1 },
+    photo: "sunset", algo: "engrave", size: 2, field: "wave", hatch: true, inkLight: false, lift: 0.4, fade: 0.2, contrast: 1.3, gamma: 1 },
   dune: { label: "Dusk · ultramarine and sand", bg: "#2a3a9e", text: "#f3efe4", muted: "#c9cdf0", ink: "#e7b46a", rule: "#5866bd", font: SANS,
-    photo: "sunset", algo: "diffuse", size: 2, kernel: "atkinson", inkLight: false, lift: 0.18, fade: 0.2, contrast: 1, gamma: 1.2 },
-  mezzo: { label: "Mezzotint · grey grain", bg: "#cdcdca", text: "#1d1e1e", muted: "#484a49", ink: "#1b1c1c", rule: "#a2a39f", font: SANS,
-    photo: "sailboat", algo: "mezzotint", size: 1, inkLight: false, lift: 0.08, fade: 0.4, contrast: 1, gamma: 1.2 },
+    photo: "sunset", algo: "diffuse", size: 1, kernel: "atkinson", inkLight: false, lift: 0.18, fade: 0.2, contrast: 1, gamma: 1.2 },
+  grain: { label: "Grain · grey", bg: "#cdcdca", text: "#1d1e1e", muted: "#484a49", ink: "#1b1c1c", rule: "#a2a39f", font: SANS,
+    photo: "sailboat", algo: "diffuse", size: 0.5, kernel: "fs", inkLight: false, lift: 0.08, fade: 0.4, contrast: 1, gamma: 1.2 },
   xylo: { label: "xylo · soft black, neutral ink", bg: "#17181b", text: "#eceff5", muted: "#97a3bb", ink: "#c3cddd", rule: "#343b46", font: SANS,
-    photo: "sunset", algo: "engrave", size: 3, field: "relief", hatch: false, inkLight: false, lift: 0.2, fade: 0.25, contrast: 1.1, gamma: 1.2 },
+    photo: "sunset", algo: "engrave", size: 2, field: "relief", hatch: false, inkLight: false, lift: 0.2, fade: 0.25, contrast: 1.1, gamma: 1.2 },
   xyloAmber: { label: "xylo · sodium amber scanline", bg: "#17181b", text: "#eceff5", muted: "#97a3bb", ink: "#e89b3c", rule: "#343b46", font: SANS,
-    photo: "sunset", algo: "scanline", size: 3, inkLight: false, lift: 0.2, fade: 0.25, contrast: 1.1, gamma: 1.1 },
+    photo: "sunset", algo: "scanline", size: 1.5, inkLight: false, lift: 0.2, fade: 0.25, contrast: 1.1, gamma: 1.1 },
   pineLight: { label: "pinecoder · light", bg: "#f6f8fa", text: "#000000", muted: "#626975", ink: "#28292a", rule: "#d1d3d6", font: SANS,
     photo: "sailboat", algo: "inkmap", inkLight: false, lift: 0.1, fade: 0.3, contrast: 1.1, gamma: 1.1, wide: { height: 620, overlap: 0 } },
   pineDark: { label: "pinecoder · dark", bg: "#17181b", text: "#eceff5", muted: "#97a3bb", ink: "#a7baed", rule: "#343b46", font: SANS,
@@ -75,7 +72,7 @@ const S = {
   plates: structuredClone(PLATE_DEFAULTS),
   theme: "dune",
   algo: "diffuse",
-  sizes: Object.fromEntries(Object.entries(ALGOS).map(([k, a]) => [k, a.size ? a.size[0] + (a.grid ? 1 : 1.5) : 0])),
+  sizes: Object.fromEntries(Object.entries(ALGOS).map(([k, a]) => [k, a.init || 0])),
   field: "wave", hatch: true, angle: 45, kernel: "atkinson",
   inkLight: false, lift: 0.12, fade: 0.25, contrast: 1, gamma: 1,
   view: "plate", bits: "auto", format: "png",
@@ -127,49 +124,29 @@ function luminance(src, W, H, p, cache = true) {
 
 // ── Pipeline ─────────────────────────────────────────────────────────────
 // Renders plate p at `scale` compute px per CSS px. Returns coverage at mask
-// resolution and the CSS size that mask maps onto.
+// resolution and the CSS size that mask maps onto. The dither ignores
+// `scale`: it samples the photo straight onto its dot grid, one pixel per
+// dot, so a fine dot costs no more than the dots it draws.
+const gridScale = () => 1 / S.sizes[S.algo];
 function compute(src, p, scale, cache = true) {
   const a = ALGOS[S.algo], size = S.sizes[S.algo];
-  const W = Math.max(1, Math.round(p.width * scale)), H = Math.max(1, Math.round(p.height * scale));
+  if (a.grid) scale = gridScale();
+  const W = a.grid ? Math.ceil(p.width * scale) : Math.max(1, Math.round(p.width * scale));
+  const H = a.grid ? Math.ceil(p.height * scale) : Math.max(1, Math.round(p.height * scale));
   const ms = {}, t0 = performance.now();
   const lum = luminance(src, W, H, p, cache);
   const t1 = performance.now();
   const t = tone(lum, W, H, { contrast: S.contrast, gamma: S.gamma, lift: S.lift, fade: S.fade, inkLight: S.inkLight });
   const t2 = performance.now();
-  let cov, cw = W, ch = H, cell = 1;
-  if (a.grid) {
-    cell = Math.max(1, Math.round(size * scale));
-    const d = downsample(t, W, H, cell);
-    cw = d.gw; ch = d.gh;
-    cov = S.algo === "bayer" ? bayer(d.g, cw, ch) : S.algo === "diffuse" ? diffuse(d.g, cw, ch, S.kernel) : mezzotint(d.g, cw, ch);
-  } else if (S.algo === "engrave") cov = engrave(t, W, H, { pitch: size * scale, field: S.field, hatch: S.hatch });
+  let cov;
+  if (a.grid) cov = diffuse(t, W, H, S.kernel);
+  else if (S.algo === "engrave") cov = engrave(t, W, H, { pitch: size * scale, field: S.field, hatch: S.hatch });
   else if (S.algo === "halftone") cov = halftone(t, W, H, { pitch: size * scale, angle: (S.angle * Math.PI) / 180 });
   else if (S.algo === "scanline") cov = scanline(t, W, H, { pitch: Math.max(2, Math.round(size * scale)) });
-  else if (S.algo === "ascii") cov = asciiPlate(t, W, H, size * scale);
   else cov = Uint8Array.from(t, (v) => v * 255 + 0.5);
   ms.crop = t1 - t0; ms.tone = t2 - t1; ms.marks = performance.now() - t2;
   const bits = S.bits === "auto" ? a.bits : +S.bits;
-  return { cov, cw, ch, bits, ms, lum, W, H, cssW: (cw * cell) / scale, cssH: (ch * cell) / scale, scale };
-}
-
-function asciiPlate(t, W, H, glyphW) {
-  const cw = Math.max(3, Math.round(glyphW)), ch = Math.round(cw * 1.7);
-  const { g, gw, gh } = downsample(t, W, H, cw, ch);
-  const cells = asciiCells(g, gw, gh);
-  const c = document.createElement("canvas");
-  c.width = W; c.height = H;
-  const ctx = c.getContext("2d", { willReadFrequently: true });
-  ctx.font = `${Math.round(ch * 0.92)}px ui-monospace, Menlo, Consolas, monospace`;
-  ctx.textBaseline = "top";
-  ctx.fillStyle = "#fff";
-  for (let y = 0; y < gh; y++)
-    for (let x = 0; x < gw; x++) {
-      const k = cells[y * gw + x];
-      if (k) ctx.fillText(ASCII_RAMP[k], x * cw, y * ch);
-    }
-  const px = ctx.getImageData(0, 0, W, H).data, cov = new Uint8Array(W * H);
-  for (let i = 0; i < cov.length; i++) cov[i] = px[i * 4 + 3];
-  return cov;
+  return { cov, cw: W, ch: H, bits, ms, lum, W, H, cssW: W / scale, cssH: H / scale, scale };
 }
 
 const hexRgb = (h) => [1, 3, 5].map((i) => parseInt(h.slice(i, i + 2), 16));
@@ -200,7 +177,7 @@ let token = 0, maskUrl = "";
 function previewScale() {
   const a = ALGOS[S.algo], p = P();
   if (a.fixedScale) return a.fixedScale;
-  if (a.grid) return 1;
+  if (a.grid) return gridScale();
   const dpr = Math.min(2, window.devicePixelRatio || 1);
   return p.width * p.height * dpr * dpr <= 4e6 ? dpr : 1;
 }
@@ -292,9 +269,9 @@ const exported = { wide: null, narrow: null };
 const signature = (which) => JSON.stringify([sourceId(), S.plates[which], S.algo, S.sizes[S.algo], S.field, S.hatch, S.angle, S.kernel, S.inkLight, S.lift, S.fade, S.contrast, S.gamma, S.bits, S.format, S.ink]);
 
 function plateDims(which) {
-  const a = ALGOS[S.algo], p = S.plates[which], s = a.exportScale, size = S.sizes[S.algo];
+  const a = ALGOS[S.algo], p = S.plates[which], s = a.grid ? gridScale() : a.exportScale;
+  if (a.grid) { const cw = Math.ceil(p.width * s), ch = Math.ceil(p.height * s); return { cw, ch, cssW: cw / s, cssH: ch / s }; }
   const W = Math.round(p.width * s), H = Math.round(p.height * s);
-  if (a.grid) { const cell = Math.max(1, Math.round(size * s)), cw = Math.ceil(W / cell), ch = Math.ceil(H / cell); return { cw, ch, cssW: (cw * cell) / s, cssH: (ch * cell) / s }; }
   return { cw: W, ch: H, cssW: W / s, cssH: H / s };
 }
 
