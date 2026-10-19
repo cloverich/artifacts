@@ -17,11 +17,14 @@ const analysis = await read('analysis.md');
 
 const html = (await read('index.html'))
   .replace('<link rel="stylesheet" href="style.css">', () => `<style>\n${css}</style>`)
-  .replace('<script type="module" src="app.js"></script>', () => `<script>\n${code.replaceAll('</script', '<\\/script')}</script>`)
+  .replace(`<script>if (location.protocol === 'file:') location.replace('dist/iso-glow.html');</script><script type="module" src="app.js"></script>`, () => `<script>\n${code.replaceAll('</script', '<\\/script')}</script>`)
   .replace('<!--RESEARCH-->', () => `<pre class="research">${escape(analysis)}</pre>`);
 
 if (/<(?:script|link)[^>]+(?:src|href)=/i.test(html)) {
   throw new Error('Unbundled runtime asset');
+}
+if ((html.match(/<script\b/gi) || []).length !== 1 || (html.match(/<\/script>/gi) || []).length !== 1) {
+  throw new Error('Expected exactly one <script>...</script> block in bundled HTML');
 }
 
 await mkdir(new URL('dist/', root), { recursive: true });

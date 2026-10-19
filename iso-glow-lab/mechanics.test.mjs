@@ -202,8 +202,11 @@ test('Tape transport physics and analytic glow + hash dither behave within bound
   assert.equal(gOut.alpha, 0);
 });
 
-test('Self-contained dist/iso-glow.html and root index.html execute all UI states without errors', () => {
+test('Self-contained dist/iso-glow.html and root index.html execute all UI states without errors', async () => {
+  await import('./build.mjs');
   const html = readFileSync(new URL('./dist/iso-glow.html', import.meta.url), 'utf8');
+  assert.equal((html.match(/<script\b/gi) || []).length, 1, 'dist/iso-glow.html must have exactly one <script> tag');
+  assert.equal((html.match(/<\/script>/gi) || []).length, 1, 'dist/iso-glow.html must have exactly one </script> tag');
   const scriptMatch = html.match(/<script>([\s\S]*?)<\/script>/);
   assert.ok(scriptMatch, 'dist/iso-glow.html must contain inline script');
 

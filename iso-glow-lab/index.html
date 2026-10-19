@@ -197,7 +197,7 @@
       <div class="kernel-grid">
         <div class="kernel-card">
           <h2>2D SVG Isometric Kernel (ISO.kernel · Affine Plane Matrices)</h2>
-          <p class="ctrl-desc">In 2D mode, `isoglow.dev` projects `(x, y, z)` via `P(x,y,z) = [(x-y)cos(30°), (x+y)sin(30°)-z]` and attaches `<g transform="matrix(...)">` groups (`TOP`, `FRONT`, `SIDE`) so flat 2D SVG `<rect>` and `<text>` elements automatically shear into isometric planes.</p>
+          <p class="ctrl-desc">In 2D mode, `isoglow.dev` projects `(x, y, z)` via `P(x,y,z) = [(x-y)cos(30°), (x+y)sin(30°)-z]` and attaches <code>&lt;g transform="matrix(...)"&gt;</code> groups (`TOP`, `FRONT`, `SIDE`) so flat 2D SVG <code>&lt;rect&gt;</code> and <code>&lt;text&gt;</code> elements automatically shear into isometric planes.</p>
           <div class="kernel-stage" id="svg-kernel-holder"></div>
           <div class="slider-row">
             <div class="slider-head">
@@ -251,9 +251,9 @@
                 </tr>
                 <tr>
                   <td><strong>3. External CDN Runtime vs. Self-Contained File</strong></td>
-                  <td>`isoglow.dev` 3D templates use `<script type="importmap">` fetching `three@0.160.0` from `cdn.jsdelivr.net` (plus a 2.5 MB inline blob in `anatomy.html`).</td>
+                  <td>`isoglow.dev` 3D templates use <code>&lt;script type="importmap"&gt;</code> fetching `three@0.160.0` from `cdn.jsdelivr.net` (plus a 2.5 MB inline blob in `anatomy.html`).</td>
                   <td>Provide a self-contained HTML artifact that opens directly from disk (`file://`) without a server or external runtime script/style URLs (`build.mjs` enforces this).</td>
-                  <td>Built a zero-dependency 3D projection, hysteresis crease, and G-buffer Sobel engine in `mechanics.mjs` + `app.js`. `dist/iso-glow.html` is ~95 KB with zero external runtime requests.</td>
+                  <td>Built a zero-dependency 3D projection, hysteresis crease, and G-buffer Sobel engine in `mechanics.mjs` + `app.js`. `dist/iso-glow.html` is ~141 KB with zero external runtime requests.</td>
                 </tr>
                 <tr>
                   <td><strong>4. `CONTEXT.md` Hypotheses vs. Live Source</strong></td>
@@ -271,6 +271,6 @@
     </section>
   </main>
 
-  <script type="module" src="app.js"></script>
+  <script>if (location.protocol === 'file:') location.replace('dist/iso-glow.html');</script><script type="module" src="app.js"></script>
 </body>
 </html>

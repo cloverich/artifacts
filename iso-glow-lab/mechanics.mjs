@@ -18,16 +18,16 @@ export const THEMES = {
   dark: {
     bg: [18, 19, 20],
     panel: [22, 23, 24],
-    body: [27, 28, 31],
-    deck: [32, 33, 36],
-    recess: [15, 16, 17],
-    line: [79, 83, 87],     // #4f5357 silhouette tier
-    major: [57, 60, 63],    // #393c3f major crease tier (>= 60 deg)
-    edge: [39, 41, 44],     // #27292c minor crease tier (>= thr deg)
-    ink: '#868b8f',
+    body: [32, 35, 40],
+    deck: [40, 44, 50],
+    recess: [19, 21, 24],
+    line: [152, 162, 174],  // sRGB-calibrated silhouette tier (from linear #4f5357)
+    major: [112, 120, 130], // sRGB-calibrated major crease tier (>= 60 deg, from linear #393c3f)
+    edge: [76, 82, 90],     // sRGB-calibrated minor crease tier (>= thr deg, from linear #27292c)
+    ink: '#949a9f',
     inkHi: '#e6e8e9',
-    glassOff: '#141516',
-    glassOn: '#22170f',
+    glassOff: '#17191c',
+    glassOn: '#291b10',
     fadeMin: 0.45,
     shadowOpacity: 0.55,
   },

@@ -58,9 +58,9 @@ import {
     glowMode: 'analytic', // 'analytic' | 'bloom' | 'nodither'
     kernelRadius: 8,
 
-    // C-07 Cassette Transport State
+    // C-07 Cassette Transport State (starts in PLAY so selective glow & VU ballistics are immediately active)
     transport: {
-      mode: 'stop', // 'stop' | 'play' | 'ff' | 'rew'
+      mode: 'play', // 'stop' | 'play' | 'ff' | 'rew'
       rec: false,
       count: 160,
       ang: 0.4,
