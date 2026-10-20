@@ -8,6 +8,12 @@
 
 const smooth = (t) => t * t * (3 - 2 * t);
 const clamp01 = (v) => (v < 0 ? 0 : v > 1 ? 1 : v);
+// Integer hash → 0..1, for deterministic noise (same recipe, same plate).
+const hash = (a, b = 0) => {
+  let h = Math.imul(a ^ 0x9e3779b9, 0x85ebca6b) ^ Math.imul(b + 0x632be5ab, 0xc2b2ae35);
+  h = Math.imul(h ^ (h >>> 15), 0x2c1b3c6d);
+  return ((h ^ (h >>> 13)) >>> 0) / 4294967296;
+};
 
 // ── Tone ─────────────────────────────────────────────────────────────────
 // Luminance → ink amount. Auto-levels on percentiles, polarity, gamma, a lift
@@ -18,7 +24,10 @@ const clamp01 = (v) => (v < 0 ? 0 : v > 1 ? 1 : v);
 // o.rect = [x0, y0, x1, y1] is the part of the frame the photo covers (the
 // whole frame unless zoomed out past cover). Outside it there is no ink;
 // levels are measured inside it; the top dissolve starts at its top edge and
-// o.sides dissolves its left and right edges by the same ramp.
+// o.sides dissolves its left and right edges by the same ramp. With
+// o.edge = "glitch" the sides tear instead: rows break into bands, each
+// pushed in or out by its own amount and cut into runs of ink and page, so
+// the edge reads as a signal breaking up rather than a gradient.
 export function tone(lum, w, h, o) {
   const [x0, y0, x1, y1] = o.rect || [0, 0, w, h];
   const hist = new Uint32Array(256);
@@ -46,10 +55,21 @@ export function tone(lum, w, h, o) {
     const d = Math.min(x - x0, x1 - 1 - x);
     side[x] = sideCols > 0 && d < sideCols ? smooth(d / sideCols) : 1;
   }
+  const glitch = o.edge === "glitch" && sideCols > 0;
   const out = new Float32Array(w * h);
+  let band = 0, bandEnd = y0;
   for (let y = y0; y < y1; y++) {
     const f = fadeRows > 0 && y - y0 < fadeRows ? smooth((y - y0) / fadeRows) : 1;
-    for (let x = x0, i = y * w + x0; x < x1; x++, i++) out[i] = lut[(lum[i] * N + 0.5) | 0] * f * side[x];
+    if (glitch && y >= bandEnd) bandEnd = y + 1 + ((hash(++band, 7) * 5) | 0);
+    const shift = (hash(band, 1) - 0.5) * 0.7, run = 2 + ((hash(band, 2) * 14) | 0);
+    for (let x = x0, i = y * w + x0; x < x1; x++, i++) {
+      let s = side[x];
+      if (glitch && s < 1) {
+        const d = Math.min(x - x0, x1 - 1 - x) / sideCols, cell = ((x < (x0 + x1) / 2 ? d : -d) * sideCols / run) | 0;
+        s = d + shift > hash(band, cell + 1000) ? smooth(clamp01(d * 1.6)) : 0;
+      }
+      out[i] = lut[(lum[i] * N + 0.5) | 0] * f * s;
+    }
   }
   return out;
 }

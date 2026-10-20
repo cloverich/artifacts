@@ -79,7 +79,7 @@ const S = {
   algo: "diffuse",
   sizes: Object.fromEntries(Object.entries(ALGOS).map(([k, a]) => [k, a.init || 0])),
   field: "wave", hatch: true, angle: 45, kernel: "atkinson",
-  inkLight: false, lift: 0.12, fade: 0.25, sides: 0, contrast: 1, gamma: 1,
+  inkLight: false, lift: 0.12, fade: 0.25, sides: 0, edge: "fade", contrast: 1, gamma: 1,
   tab: "footer", bits: "auto", format: "png",
   bg: "", ink: "", credit: "",
 };
@@ -145,7 +145,7 @@ function compute(src, p, scale, cache = true) {
   const ms = {}, t0 = performance.now();
   const { lum, rect } = luminance(src, W, H, p, cache);
   const t1 = performance.now();
-  const t = tone(lum, W, H, { contrast: S.contrast, gamma: S.gamma, lift: S.lift, fade: S.fade, sides: S.sides, inkLight: S.inkLight, rect });
+  const t = tone(lum, W, H, { contrast: S.contrast, gamma: S.gamma, lift: S.lift, fade: S.fade, sides: S.sides, edge: S.edge, inkLight: S.inkLight, rect });
   const t2 = performance.now();
   let cov;
   if (a.grid) cov = diffuse(t, W, H, S.kernel);
@@ -349,7 +349,7 @@ function setPanel(open) {
 
 // ── Export ───────────────────────────────────────────────────────────────
 const exported = { wide: null, narrow: null };
-const signature = (which) => JSON.stringify([sourceId(), S.plates[which], S.algo, S.sizes[S.algo], S.field, S.hatch, S.angle, S.kernel, S.inkLight, S.lift, S.fade, S.sides, S.contrast, S.gamma, S.bits, S.format, S.ink]);
+const signature = (which) => JSON.stringify([sourceId(), S.plates[which], S.algo, S.sizes[S.algo], S.field, S.hatch, S.angle, S.kernel, S.inkLight, S.lift, S.fade, S.sides, S.edge, S.contrast, S.gamma, S.bits, S.format, S.ink]);
 
 function plateDims(which) {
   const a = ALGOS[S.algo], p = S.plates[which], s = a.grid ? gridScale() : a.exportScale;
@@ -461,7 +461,7 @@ async function copyText(text, btn, label) {
 // chat or a commit where a 1-bit PNG would be re-encoded, and with the
 // source photo it reproduces both exports exactly (paste it here, or call
 // applyRecipe() headless). The photo itself is referenced by name only.
-const RECIPE_KEYS = ["theme", "algo", "field", "hatch", "angle", "kernel", "inkLight", "lift", "fade", "sides", "contrast", "gamma", "bits", "format", "bg", "ink", "credit"];
+const RECIPE_KEYS = ["theme", "algo", "field", "hatch", "angle", "kernel", "inkLight", "lift", "fade", "sides", "edge", "contrast", "gamma", "bits", "format", "bg", "ink", "credit"];
 function recipe() {
   const r = { horizonPlate: 1, source: S.source.kind === "photo" ? S.source.key : S.source.name.split(":")[0] };
   for (const k of RECIPE_KEYS) r[k] = S[k];
@@ -505,10 +505,13 @@ function range(id, get, set, show) {
 }
 const pct = (v) => `${Math.round(v * 100)}%`;
 
+// A theme is a full preset on the sample photos. On your own image it only
+// recolours the page: framing and tone stay, so light and dark can share them.
 function applyTheme(key) {
   const th = THEMES[key];
   S.theme = key;
   S.bg = th.bg; S.ink = th.ink;
+  if (S.source.kind === "file") return;
   Object.assign(S, { algo: th.algo, inkLight: th.inkLight, lift: th.lift, fade: th.fade, sides: th.sides || 0, contrast: th.contrast, gamma: th.gamma });
   if (th.size) S.sizes[th.algo] = th.size;
   for (const k of ["field", "hatch", "angle", "kernel"]) if (k in th) S[k] = th[k];
@@ -583,6 +586,7 @@ function initControls() {
   seg("fields", [["flat", "Flat"], ["wave", "Guilloché"], ["relief", "Relief"]], () => S.field, (k) => (S.field = k));
   seg("kernels", [["atkinson", "Atkinson"], ["fs", "Floyd–Steinberg"]], () => S.kernel, (k) => (S.kernel = k));
   seg("polarity", [["false", "Ink the shadows"], ["true", "Ink the light"]], () => S.inkLight, (k) => (S.inkLight = k === "true"));
+  seg("edges", [["fade", "Fade"], ["glitch", "Tear"]], () => S.edge, (k) => (S.edge = k));
   seg("plates", [["wide", "Wide"], ["narrow", "Narrow"]], () => S.plate, (k) => (S.plate = k));
 
   range("angle", () => S.angle, (v) => (S.angle = v), (v) => `${v}°`);
