@@ -32,7 +32,7 @@ jobs:
         run: |
           node --test exploded-atlas/mechanics.test.mjs motion-accent-lab/mechanics.test.mjs opentunnel-lab/timeline.test.mjs
           node --test soundscape/*.test.mjs
-          node --test scripts/markdown.test.mjs clip_path/mechanics.test.mjs horizon-plate/mechanics.test.mjs iso-glow-lab/mechanics.test.mjs
+          node --test scripts/markdown.test.mjs clip_path/mechanics.test.mjs horizon-plate/mechanics.test.mjs iso-glow-lab/mechanics.test.mjs reader-presence-lab/protocol.test.mjs
           node --check oxide-header-lab/app.js
       - name: Build and check publication
         run: node scripts/build-pages.mjs

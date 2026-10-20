@@ -12,7 +12,7 @@ const run = (command, args, directory = '.') => {
   if (result.error) throw result.error;
   if (result.status !== 0) throw new Error(`${command} failed in ${directory}`);
 };
-for (const project of ['exploded-atlas', 'horizon-plate', 'iso-glow-lab', 'motion-accent-lab', 'opentunnel-lab', 'soundscape', 'steward-dashboard']) {
+for (const project of ['exploded-atlas', 'horizon-plate', 'iso-glow-lab', 'motion-accent-lab', 'opentunnel-lab', 'reader-presence-lab', 'soundscape', 'steward-dashboard']) {
   run(process.execPath, ['build.mjs'], project);
 }
 await buildNotes(root);
@@ -28,6 +28,7 @@ for (const path of [
   'iso-glow-lab/dist/iso-glow.html',
   'motion-accent-lab/dist/motion-accent.html',
   'opentunnel-lab/dist/tunnel-signal.html',
+  'reader-presence-lab/dist/reader-presence.html',
   'soundscape/dist/soundscape.html',
   'steward-dashboard/dist/steward.html',
   'signal-press/index.html', 'signal-press/specimen.svg',

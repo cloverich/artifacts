@@ -1,0 +1,259 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Reader Presence Lab · 100toolkit.com WebRTC Cursors &amp; Gossiped Chat</title>
+  <meta name="description" content="Interactive study of 100toolkit.com's serverless WebRTC multi-user cursors, block-anchored [data-k] coordinates, right-edge reading strip, and peer-gossiped ephemeral chat.">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header class="dossier-bar">
+    <div class="left">
+      <a href="../index.html">← Artifacts</a>
+      <span>EST // 2024 · SEC: CLASSIFIED · ID: 928-11</span>
+    </div>
+    <div class="right">
+      <span id="mesh-status"><span class="status-dot"></span>MESH: TRYSTERO P2P (VIRTUAL + BROADCASTCHANNEL)</span>
+      <button type="button" class="link-btn" id="theme-toggle">theme: dark</button>
+    </div>
+  </header>
+
+  <main class="shell">
+    <section class="hero-header">
+      <div>
+        <div class="eyebrow">SUBJECT // 100TOOLKIT.COM MULTI-USER INTERACTION STUDY</div>
+        <h1>Quiet Pointers &amp; Gossiped Chat</h1>
+        <p>How <code>100toolkit.com</code> runs live cursors, a right-edge reading strip, shared word strikes, and a multi-user chat with <strong>zero backend server</strong> over WebRTC DataChannels (Trystero + Nostr signaling).</p>
+      </div>
+      <div class="identity-Readout" id="me-readout">
+        <span>you are</span>
+        <span class="identity-chip" id="me-chip"><i></i><b>tapestry</b></span>
+        <button type="button" class="ctrl-btn" id="reroll-me" title="Pick a new random SLOPNAMES handle and color">reroll</button>
+      </div>
+    </section>
+
+    <div class="toolbar" role="region" aria-label="Workbench controls">
+      <div class="tabs" role="tablist" aria-label="Study views">
+        <button type="button" class="tab-btn" role="tab" aria-selected="true" data-tab="stage">01 · Dual-Viewport Live Stage</button>
+        <button type="button" class="tab-btn" role="tab" aria-selected="false" data-tab="protocol">02 · Wire Protocol, Decay &amp; Rate Limiter</button>
+        <button type="button" class="tab-btn" role="tab" aria-selected="false" data-tab="study">03 · Source Dissection &amp; Tradeoffs</button>
+      </div>
+      <div class="controls-group">
+        <label>Coord Mode
+          <select id="coord-mode">
+            <option value="block" selected>Blog [data-k] Block-Anchored</option>
+            <option value="page">Landing Page-Fraction (x/docW)</option>
+          </select>
+        </label>
+        <label>Peer B View
+          <select id="peer-b-mode">
+            <option value="desktop">Desktop Wide (SVG Cursors)</option>
+            <option value="narrow">Mobile / Coarse (Margin .mark)</option>
+          </select>
+        </label>
+        <button type="button" class="ctrl-btn" id="toggle-blocks" aria-pressed="true">[data-k] bounds</button>
+        <button type="button" class="ctrl-btn" id="toggle-bots" aria-pressed="true">bots: 3 active</button>
+        <button type="button" class="ctrl-btn" id="spawn-late-peer" title="Join a new peer to trigger targeted hello + chathist gossip catch-up">+ late joiner</button>
+      </div>
+    </div>
+
+    <!-- TAB 01: DUAL-VIEWPORT LIVE STAGE -->
+    <section class="tab-panel active" id="panel-stage" role="tabpanel">
+      <div class="dual-stage">
+        <!-- VIEWPORT A: PRIMARY READER (YOU) -->
+        <div class="viewport-card" id="vp-a-card">
+          <div class="viewport-bar">
+            <div><strong>Viewport A · Primary Reader (You)</strong> <span>move mouse, scroll, double-click to ping, click words to strike</span></div>
+            <div class="presence-nav" aria-live="polite">
+              <span id="who-readout"><span class="dot on"></span>4 reading</span>
+              <button type="button" class="link-btn" id="hide-btn" aria-pressed="false" title="Live cursors use peer-to-peer connections, which show your IP address to other readers">hide</button>
+            </div>
+          </div>
+          <div class="reader-scroll show-blocks" id="vp-a-scroll">
+            <div class="lv-layer" id="vp-a-layer" aria-hidden="true"></div>
+            <article class="reader-article" id="vp-a-article">
+              <div class="doc-block" data-k="0">
+                <h2>Where AI slop comes from, and how to turn it down</h2>
+                <p>Move your pointer across any block with <code>[data-k]</code>. Other readers see a subdued <code>0.55</code> opacity arrow whose name tag appears only while moving and fades out after <code>1.6s</code> of stillness.</p>
+              </div>
+
+              <div class="doc-block slop-box" data-k="1">
+                <div class="slop-box-header">
+                  <span>SHARED WORD STRIKES · <code>act.strike.send({key, on, color})</code></span>
+                  <div class="seg-group" role="group" aria-label="Model output version">
+                    <button type="button" id="hero-before" aria-pressed="true">Before fine-tune</button>
+                    <button type="button" id="hero-after" aria-pressed="false">After deslop</button>
+                  </div>
+                </div>
+                <div class="strike-text" id="vp-a-strike-text"></div>
+              </div>
+
+              <div class="doc-block" data-k="2">
+                <h2>Block-anchored coordinates vs. page fractions</h2>
+                <p>On the landing page (<code>/live.js</code>), pointer coordinates are sent as fractions of the whole document (<code>pageX / scrollWidth</code>). On essays, coordinates are normalized inside the hovered <code>[data-k]</code> block so cursors land on the exact same word across wide and narrow screens.</p>
+              </div>
+
+              <div class="doc-block" data-k="3">
+                <h2>Double-click anywhere to send a ping</h2>
+                <p>Double-clicking inside a block broadcasts <code>act.ping.send({k, fx, fy})</code>, spawning a <code>12×12px</code> ring that expands 5× over 1 second. Scroll this pane to watch your tick move along the 6px right-edge <code>#heat</code> strip.</p>
+              </div>
+
+              <div class="doc-block" data-k="4">
+                <h2>Ephemeral P2P chat &amp; gossip history</h2>
+                <p>Open the bottom-right <strong>chat</strong> pill or click <strong>+ late joiner</strong> in the toolbar. Because there is no backend database, every connected peer sends its last 30 messages via <code>chathist</code> to each newcomer, which deduplicates by message ID.</p>
+              </div>
+            </article>
+          </div>
+          <div class="heat-strip" id="vp-a-heat" aria-hidden="true"></div>
+        </div>
+
+        <!-- VIEWPORT B: COMPANION PEER VIEWPORT & DRIFT COMPARATOR -->
+        <div class="viewport-card" id="vp-b-card">
+          <div class="viewport-bar">
+            <div><strong>Viewport B · Remote Receiver Mirror</strong> <span id="vp-b-subtitle">comparing block-anchored vs. page-fraction landing</span></div>
+            <span id="drift-readout" style="color:var(--accent)">drift: 0px</span>
+          </div>
+          <div class="reader-scroll show-blocks" id="vp-b-scroll">
+            <div class="lv-layer" id="vp-b-layer" aria-hidden="true"></div>
+            <article class="reader-article" id="vp-b-article">
+              <div class="doc-block" data-k="0">
+                <h2>Where AI slop comes from, and how to turn it down</h2>
+                <p>Move your pointer across any block with <code>[data-k]</code>. Other readers see a subdued <code>0.55</code> opacity arrow whose name tag appears only while moving and fades out after <code>1.6s</code> of stillness.</p>
+              </div>
+
+              <div class="doc-block slop-box" data-k="1">
+                <div class="slop-box-header">
+                  <span>PEER B MIRROR · SYNCS STRIKES VIA <code>hello</code> &amp; <code>strike</code></span>
+                </div>
+                <div class="strike-text" id="vp-b-strike-text"></div>
+              </div>
+
+              <div class="doc-block" data-k="2">
+                <h2>Block-anchored coordinates vs. page fractions</h2>
+                <p>On the landing page (<code>/live.js</code>), pointer coordinates are sent as fractions of the whole document (<code>pageX / scrollWidth</code>). On essays, coordinates are normalized inside the hovered <code>[data-k]</code> block so cursors land on the exact same word across wide and narrow screens.</p>
+              </div>
+
+              <div class="doc-block" data-k="3">
+                <h2>Double-click anywhere to send a ping</h2>
+                <p>Double-clicking inside a block broadcasts <code>act.ping.send({k, fx, fy})</code>, spawning a <code>12×12px</code> ring that expands 5× over 1 second. Scroll this pane to watch your tick move along the 6px right-edge <code>#heat</code> strip.</p>
+              </div>
+
+              <div class="doc-block" data-k="4">
+                <h2>Ephemeral P2P chat &amp; gossip history</h2>
+                <p>Open the bottom-right <strong>chat</strong> pill or click <strong>+ late joiner</strong> in the toolbar. Because there is no backend database, every connected peer sends its last 30 messages via <code>chathist</code> to each newcomer, which deduplicates by message ID.</p>
+              </div>
+            </article>
+          </div>
+          <div class="heat-strip" id="vp-b-heat" aria-hidden="true"></div>
+        </div>
+      </div>
+
+      <!-- Quick Live Telemetry Strip under Stage -->
+      <div class="inspector-grid">
+        <div class="card-panel">
+          <h3>Live DataChannel Frame Stream</h3>
+          <p>Real-time Trystero action frames (<code>hello</code>, <code>move</code>, <code>ping</code>, <code>strike</code>, <code>chat</code>, <code>chathist</code>). Open a second tab of this page to see cross-tab <code>BroadcastChannel</code> traffic.</p>
+          <div class="wire-log" id="stage-wire-log" aria-live="off"></div>
+        </div>
+        <div class="card-panel">
+          <h3>Coordinate &amp; Mesh Telemetry</h3>
+          <p>Compares how your last pointer packet resolves in Viewport B under both coordinate systems, plus active peer decay timers.</p>
+          <div id="coord-telemetry" style="font:400 12px/1.65 var(--mono); color:var(--soft)">
+            Move your pointer inside Viewport A to inspect live packet encoding.
+          </div>
+          <div style="margin-top:12px; display:flex; flex-wrap:wrap; gap:8px">
+            <button type="button" class="ctrl-btn" id="sim-bot-chat">bot sends chat (triggers toast)</button>
+            <button type="button" class="ctrl-btn" id="sim-burst-chat">burst 7 msgs (trip rate limit)</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- TAB 02: WIRE PROTOCOL, DECAY & RATE LIMITER LAB -->
+    <section class="tab-panel" id="panel-protocol" role="tabpanel">
+      <div class="inspector-grid">
+        <div class="card-panel">
+          <h3>01 · Two-Stage Visual Decay Scrubber</h3>
+          <p>Instead of a <code>requestAnimationFrame</code> loop, <code>100toolkit.com</code> uses CSS transitions and two <code>setTimeout</code> timers per peer (<code>1600ms</code> label fade, <code>9000ms</code> cursor fade, <code>20000ms</code> margin marker fade).</p>
+          <label style="display:flex; align-items:center; gap:10px; font:500 12px var(--mono); margin:10px 0">
+            Idle elapsed: <input type="range" id="decay-slider" min="0" max="10500" step="100" value="400" style="flex:1">
+            <span id="decay-ms-label">400 ms</span>
+          </label>
+          <div class="decay-bar" id="decay-stages">
+            <div class="decay-seg active" data-phase="moving">0–1.6s: .moving (label 0.92)</div>
+            <div class="decay-seg" data-phase="quiet">1.6–9.0s: quiet arrow (0.55)</div>
+            <div class="decay-seg" data-phase="dormant">&ge;9.0s: dormant (0)</div>
+          </div>
+          <div id="decay-preview-box" style="position:relative; height:96px; background:var(--bg); border:1px solid var(--rule); border-radius:6px; margin-top:10px; overflow:hidden">
+            <div class="lv-cur moving" id="decay-demo-cur" style="transform:translate(110px, 34px); opacity:0.55">
+              <svg width="10" height="13" viewBox="0 0 18 22"><path d="M1 1 L1 18 L6 13.5 L9.5 21 L12.5 19.6 L9 12.3 L16 12.3 Z" fill="#2f6fdf" stroke="#fff" stroke-width="1.6" stroke-linejoin="round"/></svg>
+              <span style="background:#2f6fdf">delve</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="card-panel">
+          <h3>02 · Sliding-Window Per-Peer Rate Limiter</h3>
+          <p><code>chat.js</code> allows at most <strong>6 messages per 10,000 ms</strong> per peer: <code>rate[peer].filter(t =&gt; now - t &lt; 10000)</code>. Click below to fire packets into the window.</p>
+          <div class="rate-slots" id="rate-slots">
+            <div class="rate-slot">1</div>
+            <div class="rate-slot">2</div>
+            <div class="rate-slot">3</div>
+            <div class="rate-slot">4</div>
+            <div class="rate-slot">5</div>
+            <div class="rate-slot">6</div>
+          </div>
+          <div id="rate-status" style="font:400 12px var(--mono); color:var(--soft); margin-bottom:10px">
+            Window usage: 0 / 6 messages in last 10.0s
+          </div>
+          <div style="display:flex; gap:8px; flex-wrap:wrap">
+            <button type="button" class="ctrl-btn" id="rate-fire-one">send 1 chat packet</button>
+            <button type="button" class="ctrl-btn" id="rate-fire-seven">burst 7 packets</button>
+            <button type="button" class="ctrl-btn" id="rate-reset">clear window</button>
+          </div>
+        </div>
+
+        <div class="card-panel">
+          <h3>03 · WebRTC Full-Mesh Scaling Calculator</h3>
+          <p>Because Trystero builds a direct browser-to-browser <code>RTCDataChannel</code> mesh without a central relay server, connection count grows as <code>N(N - 1) / 2</code>.</p>
+          <label style="display:flex; align-items:center; gap:10px; font:500 12px var(--mono); margin:10px 0">
+            Concurrent readers (N): <input type="range" id="mesh-n-slider" min="2" max="60" step="1" value="8" style="flex:1">
+            <span id="mesh-n-label">8 peers</span>
+          </label>
+          <div id="mesh-calc-readout" style="font:400 12px/1.7 var(--mono); color:var(--soft)"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- TAB 03: EMBEDDED ENGINEERING STUDY -->
+    <section class="tab-panel" id="panel-study" role="tabpanel">
+      <article class="study-prose" id="study-content"><!--RESEARCH--></article>
+    </section>
+  </main>
+
+  <!-- 100toolkit.com Self Pointer Tag (.lv-tag / .selftag) -->
+  <div class="lv-tag" id="self-tag" aria-hidden="true"><span>tapestry · you</span></div>
+
+  <!-- 100toolkit.com Bottom Presence Pill (#pill) -->
+  <div id="pill" aria-live="polite"></div>
+
+  <!-- 100toolkit.com Readers' Chat (#chatbtn, #chatbox, #chattoast) -->
+  <button type="button" id="chatbtn" aria-expanded="false">chat <b></b></button>
+  <div id="chatbox" role="dialog" aria-label="Readers' chat">
+    <header>
+      <strong>Readers' chat</strong>
+      <small>only people reading now see this · nothing is saved</small>
+      <button type="button" id="chatclose" aria-label="Close">×</button>
+    </header>
+    <div id="chatlog" aria-live="polite"></div>
+    <form id="chatform" autocomplete="off">
+      <input id="chatinput" maxlength="280" placeholder="Say something" aria-label="Message">
+      <button type="submit" id="chatsend">send</button>
+    </form>
+  </div>
+  <div id="chattoast" aria-hidden="true"></div>
+
+  <script>if (location.protocol === 'file:') location.replace('dist/reader-presence.html');</script><script type="module" src="app.js"></script>
+</body>
+</html>
